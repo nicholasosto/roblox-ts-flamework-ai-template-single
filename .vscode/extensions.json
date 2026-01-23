@@ -1,0 +1,10 @@
+{
+	"recommendations": [
+		"roblox-ts.vscode-roblox-ts",
+		"evaera.vscode-rojo",
+		"dbaeumer.vscode-eslint",
+		"esbenp.prettier-vscode",
+		"github.copilot",
+		"github.copilot-chat"
+	]
+}

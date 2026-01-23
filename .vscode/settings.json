@@ -1,0 +1,30 @@
+{
+	"editor.formatOnSave": true,
+	"editor.defaultFormatter": "esbenp.prettier-vscode",
+	"editor.codeActionsOnSave": {
+		"source.fixAll.eslint": "explicit"
+	},
+	"eslint.validate": ["typescript"],
+	"typescript.tsdk": "node_modules/typescript/lib",
+	"files.exclude": {
+		"**/.git": true,
+		"**/.DS_Store": true,
+		"**/node_modules": true,
+		"out": true
+	},
+	"search.exclude": {
+		"**/node_modules": true,
+		"**/out": true
+	},
+	"files.watcherExclude": {
+		"**/node_modules/**": true,
+		"**/out/**": true
+	},
+	"[typescript]": {
+		"editor.defaultFormatter": "esbenp.prettier-vscode",
+		"editor.tabSize": 4,
+		"editor.insertSpaces": false
+	},
+	"terminal.integrated.defaultProfile.osx": "zsh",
+	"typescript.preferences.importModuleSpecifier": "relative"
+}

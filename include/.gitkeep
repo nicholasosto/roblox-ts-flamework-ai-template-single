@@ -1,0 +1,10 @@
+# Include Directory
+
+This directory is reserved for external TypeScript definitions and git submodules.
+
+Common uses:
+- Git submodules for shared code
+- Third-party type definitions
+- External library integrations
+
+Leave empty if not needed.

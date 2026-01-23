@@ -1,0 +1,9 @@
+node_modules/
+out/
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+*.log
+.DS_Store
+.vscode/.rojoCache
