@@ -3,7 +3,9 @@
 	"flameworkVersion": "1.3.2",
 	"identifiers": {
 		"roblox-ts-flamework-template:out/shared/network/flamework-remotes@GlobalEvents": "shared/network/flamework-remotes@GlobalEvents",
-		"roblox-ts-flamework-template:out/shared/network/flamework-remotes@GlobalFunctions": "shared/network/flamework-remotes@GlobalFunctions"
+		"roblox-ts-flamework-template:out/shared/network/flamework-remotes@GlobalFunctions": "shared/network/flamework-remotes@GlobalFunctions",
+		"roblox-ts-flamework-template:out/server/player-profile-service@PlayerProfileService": "server/player-profile-service@PlayerProfileService",
+		"roblox-ts-flamework-template:out/server/services/player-profile-service@PlayerProfileService": "server/services/player-profile-service@PlayerProfileService"
 	},
 	"metadata": {}
 }

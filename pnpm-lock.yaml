@@ -17,6 +17,21 @@ importers:
       '@flamework/networking':
         specifier: ^1.3.0
         version: 1.3.2(@flamework/core@1.3.2)
+      '@rbxts/charm':
+        specifier: ^0.10.0
+        version: 0.10.0
+      '@rbxts/charm-sync':
+        specifier: ^0.3.0
+        version: 0.3.0(@rbxts/charm@0.10.0)
+      '@rbxts/janitor':
+        specifier: 1.18.3-ts.0
+        version: 1.18.3-ts.0
+      '@rbxts/maid':
+        specifier: ^1.1.0
+        version: 1.1.0
+      '@rbxts/profile-store':
+        specifier: ^1.0.3
+        version: 1.0.3
       '@rbxts/services':
         specifier: ^1.5.4
         version: 1.6.0
@@ -26,6 +41,9 @@ importers:
       '@rbxts/t':
         specifier: ^3.1.1
         version: 3.2.1
+      '@rbxts/wcs':
+        specifier: ^2.5.0
+        version: 2.5.0(rbxts-transformer-flamework@1.3.2(typescript@5.9.3))
     devDependencies:
       '@rbxts/compiler-types':
         specifier: 3.0.0-types.0
@@ -120,8 +138,34 @@ packages:
     resolution: {integrity: sha512-oGB+UxlgWcgQkgwo8GcEGwemoTFt3FIO9ababBmaGwXIoBKZ+GTy0pP185beGg7Llih/NSHSV2XAs1lnznocSg==}
     engines: {node: '>= 8'}
 
+  '@rbxts/charm-sync@0.3.0':
+    resolution: {integrity: sha512-+kvyn6pUXkLpvxFnZhMDE/v15LA1gnfKlmmiK85O0EX5GoY1Yqs4GJUGy1X04b7OdTeXxX9rKrFpmJNX+9054A==}
+    peerDependencies:
+      '@rbxts/charm': 0.10.0
+
+  '@rbxts/charm@0.10.0':
+    resolution: {integrity: sha512-pcGpNyqNOcJ7r9UbAjFaUqU0F9Q+wCr4/2kUs8L0hh4dVhUN7t6ur4P7zAMzNuMJQG8YP47a9rq0l0/LlhLuow==}
+
   '@rbxts/compiler-types@3.0.0-types.0':
     resolution: {integrity: sha512-VGOHJPoL7+56NTatMGqQj3K7xWuzEV+aP4QD5vZiHu+bcff3kiTmtoadaF6NkJrmwfFAvbsd4Dg764ZjWNceag==}
+
+  '@rbxts/dumpster@1.0.8':
+    resolution: {integrity: sha512-mkitEvfA166+EkRPF51vji9ZkAJEbqtwvrMAtPhP6EJy8IKAgh5QseHu5Zh1d5n459ufy1qY+5XHjGi2fQCqJg==}
+
+  '@rbxts/flamework-binary-serializer@0.6.0':
+    resolution: {integrity: sha512-tB6zoE0PCJ6DLQCCNvzOe75pLnhp8eq8YmpQQAALq9fqsSW+zXEAnY5tawCvJkJOApKcMQBhBDAGhpazGaRFgg==}
+    peerDependencies:
+      '@flamework/core': '*'
+      rbxts-transformer-flamework: '*'
+
+  '@rbxts/immut@0.4.4-ts.0':
+    resolution: {integrity: sha512-NwEBp3GmBfcEHTLx1U4dQtNjstoYlWs86n4BeEKY23x5rSjfxOQtoKwEsoTkcxZuodQG2rFQz5IGT/OKqWAgOg==}
+
+  '@rbxts/janitor@1.17.0-ts.1':
+    resolution: {integrity: sha512-LFtmpiwx1lixjVH1HV0EUUPaDF8BCmw41vjgsXcRq+d4yl2dVmT+oVHrMkdYWxltSezjDpK+9GbL18twlAGSwg==}
+
+  '@rbxts/janitor@1.18.3-ts.0':
+    resolution: {integrity: sha512-xr6DBJfQ+k0hbkx1pOYteYOBfinYO/otd+NnpiDaVaR78n89cusxBzKrdImNFzBs+GDVG9qnEZb6HbRZyMkz5g==}
 
   '@rbxts/maid@1.1.0':
     resolution: {integrity: sha512-bVWXZ0p2M3OJzPzvN5fY0T4s37ezUMY7EX31Xspp7Ds4C/K9yE4MHMRXjtlNvsYVPmoc5tdhAbpZY02Veix5lg==}
@@ -129,11 +173,20 @@ packages:
   '@rbxts/object-utils@1.0.4':
     resolution: {integrity: sha512-dLLhf022ipV+9i910sOE7kl9losKHoon0WgeerHqVMQA5EYsLUsVT2AxhJuhk8MiDn5oJ2GiFofE/LadY9TpJQ==}
 
+  '@rbxts/profile-store@1.0.3':
+    resolution: {integrity: sha512-hhaBnE7iabydxMMlun9ezD1oFCfETFXp95r2hjmQUip5GrGLGugAbrzdUhEaqRpdDaM+c4qsj2JfskdAUfz/mw==}
+
   '@rbxts/services@1.6.0':
     resolution: {integrity: sha512-YH02E1/tGHeMXB0Mam8qPdAZa2fjQWdylEscSL4Zn0RIaQeByYImA2qUsXM3nBdhcyKHDwltzSznDKyCGfFEWA==}
 
   '@rbxts/signal@1.1.1':
     resolution: {integrity: sha512-WX+ONE+ld4pG9PvRkR8OgDld9NpaV1RfXyUIw+Q2oXP/5rehkYzvt20NWtrLAP3NhMc5inYInLd+hnufey6nFw==}
+
+  '@rbxts/signals-tooling@1.0.8':
+    resolution: {integrity: sha512-BJ5uiFqoKMw7F5QfK5k21CXg/RoFiikh1PfEgoobbEbgWRxPbNT4QCWDASixxcNjBA0Hfph1hb7CUc61p+u6KQ==}
+
+  '@rbxts/sleitnick-signal@1.0.8':
+    resolution: {integrity: sha512-0Xa7cThF25OKc6L66sQ3IFiMsCWf1iEfWJrddB9QnR91W1Yv2oihGbnYndIDAl3oKdndMZDNtbWsPEJsrP5Uwg==}
 
   '@rbxts/t@2.2.1':
     resolution: {integrity: sha512-MoFLHRQdm1tpAviAVxgkQj/ktxtnGBund2HXQj5xRqgYUWuC3kYuLkctuxXiJHUd1o1JzfU/HvVHtZfpqp61tg==}
@@ -141,8 +194,14 @@ packages:
   '@rbxts/t@3.2.1':
     resolution: {integrity: sha512-/fnf2QSx+TI3HSJ6QW2ikvGQk0mlx/63UXo60pLAKGqbxXiAuTJh88bpKpHw6aCzfFLJAwrVIcgCUOokLMPcag==}
 
+  '@rbxts/timer@0.0.9':
+    resolution: {integrity: sha512-XeX68qpRjNxvDy5efcWI0jGKM4zRFyV6EhQHSmuBbWZDQl1pD2F7h95lSZK53ai2Z2mP1l94UQYY93WMODUcIQ==}
+
   '@rbxts/types@1.0.903':
     resolution: {integrity: sha512-Ks0bXHwUHHZJG29A2VGCLFZ/oi+FNOsempakTDF9SrbbOpn/CmwY0nOpwjWJ6PzeIWzCQ2jvBY7+MlvYiumuaQ==}
+
+  '@rbxts/wcs@2.5.0':
+    resolution: {integrity: sha512-yQfM74/gC4O70FMpP0XGcBHGolaKvh+ETNfgTayRXhE5Z/tdDl9yWrzGYK4PecHyjTx1BMqXL1EUFq4Fbd7Wtg==}
 
   '@roblox-ts/luau-ast@2.0.0':
     resolution: {integrity: sha512-cmMi093IdwBOLVxwuordhM8AmtbyTIyRpsTbB0D/JauidW4SXsQRQowSwWjHo4QP0DRJBXvOIlxtqEQi50uNzQ==}
@@ -943,21 +1002,71 @@ snapshots:
       '@nodelib/fs.scandir': 2.1.5
       fastq: 1.20.1
 
+  '@rbxts/charm-sync@0.3.0(@rbxts/charm@0.10.0)':
+    dependencies:
+      '@rbxts/charm': 0.10.0
+
+  '@rbxts/charm@0.10.0': {}
+
   '@rbxts/compiler-types@3.0.0-types.0': {}
+
+  '@rbxts/dumpster@1.0.8': {}
+
+  '@rbxts/flamework-binary-serializer@0.6.0(@flamework/core@1.3.2)(rbxts-transformer-flamework@1.3.2(typescript@5.9.3))':
+    dependencies:
+      '@flamework/core': 1.3.2
+      rbxts-transformer-flamework: 1.3.2(typescript@5.9.3)
+
+  '@rbxts/immut@0.4.4-ts.0': {}
+
+  '@rbxts/janitor@1.17.0-ts.1': {}
+
+  '@rbxts/janitor@1.18.3-ts.0': {}
 
   '@rbxts/maid@1.1.0': {}
 
   '@rbxts/object-utils@1.0.4': {}
 
+  '@rbxts/profile-store@1.0.3': {}
+
   '@rbxts/services@1.6.0': {}
 
   '@rbxts/signal@1.1.1': {}
+
+  '@rbxts/signals-tooling@1.0.8':
+    dependencies:
+      '@rbxts/dumpster': 1.0.8
+      '@rbxts/services': 1.6.0
+
+  '@rbxts/sleitnick-signal@1.0.8': {}
 
   '@rbxts/t@2.2.1': {}
 
   '@rbxts/t@3.2.1': {}
 
+  '@rbxts/timer@0.0.9':
+    dependencies:
+      '@rbxts/dumpster': 1.0.8
+      '@rbxts/services': 1.6.0
+      '@rbxts/signals-tooling': 1.0.8
+
   '@rbxts/types@1.0.903': {}
+
+  '@rbxts/wcs@2.5.0(rbxts-transformer-flamework@1.3.2(typescript@5.9.3))':
+    dependencies:
+      '@flamework/core': 1.3.2
+      '@flamework/networking': 1.3.2(@flamework/core@1.3.2)
+      '@rbxts/charm': 0.10.0
+      '@rbxts/charm-sync': 0.3.0(@rbxts/charm@0.10.0)
+      '@rbxts/flamework-binary-serializer': 0.6.0(@flamework/core@1.3.2)(rbxts-transformer-flamework@1.3.2(typescript@5.9.3))
+      '@rbxts/immut': 0.4.4-ts.0
+      '@rbxts/janitor': 1.17.0-ts.1
+      '@rbxts/services': 1.6.0
+      '@rbxts/sleitnick-signal': 1.0.8
+      '@rbxts/t': 3.2.1
+      '@rbxts/timer': 0.0.9
+    transitivePeerDependencies:
+      - rbxts-transformer-flamework
 
   '@roblox-ts/luau-ast@2.0.0': {}
 

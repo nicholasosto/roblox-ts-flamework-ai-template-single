@@ -2,6 +2,12 @@
 	"compilerOptions": {
 		"outDir": "out",
 		"rootDir": "src",
+		"baseUrl": "src",
+		"paths": {
+			"shared/*": ["shared/*"],
+			"client/*": ["client/*"],
+			"server/*": ["server/*"]
+		},
 		"module": "commonjs",
 		"strict": true,
 		"noImplicitAny": true,
