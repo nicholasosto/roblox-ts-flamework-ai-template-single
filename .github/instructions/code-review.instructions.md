@@ -1,5 +1,5 @@
 ---
-applyTo: '**/*.ts'
+applyTo: "**/*.ts"
 ---
 
 # Code Review Checklist for Roblox-TS + Flamework
@@ -7,108 +7,126 @@ applyTo: '**/*.ts'
 ## Roblox API Usage
 
 - [ ] **Not manually destroying auto-destroyed instances**
-  - Example: Player Characters are cleaned up automatically
-  
+    - Example: Player Characters are cleaned up automatically
 - [ ] **Using native methods instead of manual iteration**
-  - Use `ClearAllChildren()` instead of looping and destroying
-  - Use `RemoveAccessories()` instead of manually filtering and removing
-  - Use `FindFirstChildOfClass()` instead of manual type checking loops
+    - Use `ClearAllChildren()` instead of looping and destroying
+    - Use `RemoveAccessories()` instead of manually filtering and removing
+    - Use `FindFirstChildOfClass()` instead of manual type checking loops
 
 - [ ] **Importing services from @rbxts/services**
-  - ✅ `import { Players } from "@rbxts/services";`
-  - ❌ `const Players = game.GetService("Players");`
+    - ✅ `import { Players } from "@rbxts/services";`
+    - ❌ `const Players = game.GetService("Players");`
 
 - [ ] **Not sending instances over network**
-  - Send data (name, position, etc.) instead of instance references
+    - Send data (name, position, etc.) instead of instance references
 
 ## Flamework Patterns
 
 - [ ] **Single network instance export**
-  - Only call `createServer()` or `createClient()` ONCE
-  - Import from server-network.ts or client-network.ts
+    - Only call `createServer()` or `createClient()` ONCE
+    - Import from server-network.ts or client-network.ts
 
 - [ ] **Using Signals for events, not polling loops**
-  - ✅ Use `@rbxts/signal` for custom events
-  - ❌ Avoid `while(true)` loops checking state
+    - ✅ Use `@rbxts/signal` for custom events
+    - ❌ Avoid `while(true)` loops checking state
 
 - [ ] **Proper lifecycle method usage**
-  - Keep constructors lightweight
-  - Use `onInit()` for initialization
-  - Use `onStart()` for logic that needs other services/controllers
+    - Keep constructors lightweight
+    - Use `onInit()` for initialization
+    - Use `onStart()` for logic that needs other services/controllers
 
 - [ ] **Dependency injection for services/controllers**
-  - ✅ Inject via constructor
-  - ❌ Don't manually instantiate with `new`
+    - ✅ Inject via constructor
+    - ❌ Don't manually instantiate with `new`
 
 - [ ] **Component cleanup in destroy()**
-  - Always disconnect connections in component `destroy()` method
-  - Clean up spawned instances
+    - Always disconnect connections in component `destroy()` method
+    - Clean up spawned instances
 
 ## TypeScript Best Practices
 
 - [ ] **No unused variables**
-  - Remove or prefix with underscore: `_unusedParam`
+    - Remove or prefix with underscore: `_unusedParam`
 
 - [ ] **No explicit `any` types**
-  - Use proper types or `unknown` if type is truly unknown
+    - Use proper types or `unknown` if type is truly unknown
 
 - [ ] **Using optional chaining where appropriate**
-  - ✅ `player.Character?.FindFirstChild("Humanoid")`
-  - Better than nested if checks
+    - ✅ `player.Character?.FindFirstChild("Humanoid")`
+    - Better than nested if checks
 
 - [ ] **Proper async/await usage**
-  - Always await Promises or use `.then()`
-  - Handle errors with try/catch
+    - Always await Promises or use `.then()`
+    - Handle errors with try/catch
 
 - [ ] **Type safety with Flamework**
-  - Define Attributes interface for components
-  - Type networking interfaces properly
-  - Specify instance types in components: `BaseComponent<Attributes, Part>`
+    - Define Attributes interface for components
+    - Type networking interfaces properly
+    - Specify instance types in components: `BaseComponent<Attributes, Part>`
 
 ## Performance
 
 - [ ] **Not creating instances in loops**
-  - Pre-create and reuse when possible
-  - Use object pooling for frequently created/destroyed objects
+    - Pre-create and reuse when possible
+    - Use object pooling for frequently created/destroyed objects
 
 - [ ] **Using WaitForChild() appropriately**
-  - Don't use in hot loops
-  - Consider FindFirstChild() with existence check for non-critical paths
+    - Don't use in hot loops
+    - Consider FindFirstChild() with existence check for non-critical paths
 
 - [ ] **Efficient event handling**
-  - Disconnect events when no longer needed
-  - Use `once` pattern for one-time events
+    - Disconnect events when no longer needed
+    - Use `once` pattern for one-time events
 
 ## Security (Server-side)
 
 - [ ] **Validating client input**
-  - Never trust data from client events
-  - Validate types, ranges, and permissions
+    - Never trust data from client events
+    - Validate types, ranges, and permissions
 
 - [ ] **Rate limiting client requests**
-  - Prevent spam/abuse of remote events
+    - Prevent spam/abuse of remote events
 
 - [ ] **Server authority for game state**
-  - Server decides what's valid, not client
+    - Server decides what's valid, not client
+
+## WCS Combat Patterns
+
+- [ ] **WCS Server/Client started before characters**
+    - Call `CreateServer().Start()` / `CreateClient().Start()` before creating WCS Characters
+    - Register skill directories with `RegisterDirectory()`
+
+- [ ] **Skills in shared/, not client/ or server/**
+    - WCS skills must be accessible to both sides
+    - Put skills in `src/shared/combat/skills/`
+
+- [ ] **Client visuals independent of skill lifecycle**
+    - Use `task.spawn()` for visuals that outlive the skill
+    - Don't cleanup projectile visuals in `OnEndClient()` if they're still flying
+
+- [ ] **Server-authoritative hit detection**
+    - Raycasts/damage on server, visuals on client
+    - Filter character from own projectile raycasts
 
 ## Organization
 
 - [ ] **Files in correct directories**
-  - Server code in `src/server/`
-  - Client code in `src/client/`
-  - Shared code in `src/shared/`
+    - Server code in `src/server/`
+    - Client code in `src/client/`
+    - Shared code in `src/shared/`
 
 - [ ] **Proper namespacing in networking**
-  - Group related events logically
-  - Use descriptive namespace names
+    - Group related events logically
+    - Use descriptive namespace names
 
 - [ ] **Single responsibility**
-  - Services/controllers should have one clear purpose
-  - Break up large files into smaller, focused ones
+    - Services/controllers should have one clear purpose
+    - Break up large files into smaller, focused ones
 
 ## Common Mistakes to Avoid
 
 ### ❌ Multiple Network Instances
+
 ```typescript
 // DON'T create multiple server/client instances
 const Events = GlobalEvents.createServer(); // In file 1
@@ -116,6 +134,7 @@ const Events = GlobalEvents.createServer(); // In file 2 - WRONG!
 ```
 
 ### ❌ Manual Iteration for Native Methods
+
 ```typescript
 // DON'T manually iterate when native methods exist
 for (const child of folder.GetChildren()) {
@@ -125,6 +144,7 @@ for (const child of folder.GetChildren()) {
 ```
 
 ### ❌ Heavy Constructor Logic
+
 ```typescript
 // DON'T put logic in constructors
 @Service()
@@ -136,6 +156,7 @@ class BadService {
 ```
 
 ### ❌ Not Cleaning Up Components
+
 ```typescript
 // DON'T forget to disconnect in destroy()
 @Component({ tag: "MyComponent" })
@@ -160,6 +181,7 @@ Before approving code, ask:
 ## When to Read Skills
 
 If reviewing code involving:
+
 - Services → Read `flamework-service/SKILL.md`
 - Components → Read `flamework-component/SKILL.md`
 - Controllers → Read `flamework-controller/SKILL.md`

@@ -7,6 +7,7 @@ logger.info("Initializing Flamework...");
 
 // Add paths to scan for Flamework decorators
 Flamework.addPaths("src/server/services");
+Flamework.addPaths("src/server/components");
 Flamework.addPaths("src/shared");
 
 // Start Flamework

@@ -5,6 +5,7 @@ This file provides general guidance for working with this Roblox-TS game project
 ## Project Overview
 
 This is a **single-package** Roblox game project that uses:
+
 - **roblox-ts** - TypeScript compiler for Roblox
 - **Flamework** - Dependency injection and networking framework
 - **Rojo** - Syncs code to Roblox Studio
@@ -15,18 +16,21 @@ This is a **single-package** Roblox game project that uses:
 ### Starting Development
 
 1. **Terminal 1:** Start TypeScript compiler in watch mode
-   ```bash
-   pnpm run watch
-   ```
+
+    ```bash
+    pnpm run watch
+    ```
 
 2. **Terminal 2:** Start Rojo server
-   ```bash
-   pnpm run serve
-   ```
+
+    ```bash
+    pnpm run serve
+    ```
 
 3. **Roblox Studio:** Connect via Rojo plugin to `localhost:34872`
 
 Or use the combined command:
+
 ```bash
 pnpm run dev
 ```
@@ -49,6 +53,7 @@ src/
 │   ├── main.server.ts
 │   └── services/    Server-side services
 └── shared/          Shared code (ModuleScripts)
+    ├── combat/      WCS skills, status effects, projectiles
     ├── network/     Networking definitions
     ├── types/       Type definitions
     └── utils/       Utility functions
@@ -59,18 +64,21 @@ src/
 ### Client vs Server vs Shared
 
 **Client (`src/client/`):**
+
 - UI logic
 - Input handling
 - Client-side effects (camera, sounds)
 - Controllers only
 
 **Server (`src/server/`):**
+
 - Game logic and validation
 - Player data management
 - Server authority
 - Services only
 
 **Shared (`src/shared/`):**
+
 - Type definitions
 - Networking interfaces
 - Utility functions
@@ -80,6 +88,7 @@ src/
 ### When to Create a Service (Server)
 
 Create a Service when you need:
+
 - Server-side game logic
 - Player data management
 - Game state management
@@ -90,6 +99,7 @@ Example: `PlayerDataService`, `RoundService`, `CombatService`
 ### When to Create a Controller (Client)
 
 Create a Controller when you need:
+
 - UI management
 - Input handling
 - Client-side state
@@ -100,6 +110,7 @@ Example: `UIController`, `InputController`, `CameraController`
 ### When to Create a Component
 
 Create a Component when you need:
+
 - Logic attached to specific instances
 - Behavior driven by attributes
 - Reusable instance behaviors
@@ -120,6 +131,7 @@ shared/network/
 ### Adding a New Network Event
 
 1. Add to interface in `flamework-remotes.ts`:
+
 ```typescript
 export interface ClientToServerEvents {
 	player: {
@@ -129,6 +141,7 @@ export interface ClientToServerEvents {
 ```
 
 2. Use in service/controller:
+
 ```typescript
 // Server
 import { Events } from "shared/network/server-network";
@@ -148,6 +161,7 @@ This project includes Copilot skills for common patterns. Reference them when:
 - **Creating Controllers** → See `.github/skills/flamework-controller/SKILL.md`
 - **Setting up Networking** → See `.github/skills/flamework-networking/SKILL.md`
 - **Using Roblox APIs** → See `.github/skills/roblox-api/SKILL.md`
+- **Combat/Skills (WCS)** → See `.github/skills/wcs-skill/SKILL.md`
 
 ## Common Commands
 
@@ -184,6 +198,7 @@ pnpm run format
 ## Rojo Configuration
 
 The `default.project.json` maps:
+
 - `out/server` → ServerScriptService.TS
 - `out/shared` → ReplicatedStorage.TS
 - `out/client` → StarterPlayer.StarterPlayerScripts.TS
@@ -201,21 +216,25 @@ The `default.project.json` maps:
 ## Troubleshooting
 
 ### "Module not found" errors
+
 - Run `pnpm install`
 - Check import paths are correct
 - Verify file is in correct directory (client/server/shared)
 
 ### Changes not appearing in Studio
+
 - Check Rojo is connected (green indicator)
 - Verify TypeScript compiled (check terminal for errors)
 - Try reconnecting Rojo
 
 ### Networking not working
+
 - Verify you're importing from correct file (server-network vs client-network)
 - Check interface definitions match
 - Ensure only ONE createServer/createClient call
 
 ### Flamework not finding decorators
+
 - Verify `Flamework.addPaths()` includes the directory
 - Check decorator is correctly applied
 - Ensure transformer is in tsconfig.json

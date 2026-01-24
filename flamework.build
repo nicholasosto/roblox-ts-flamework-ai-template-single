@@ -13,7 +13,14 @@
 		"roblox-ts-flamework-template:out/client/controllers/wcs-controller@WCSController": "client/controllers/wcs-controller@WCSController",
 		"roblox-ts-flamework-template:out/server/services/wcs-service@WCSService": "server/services/wcs-service@WCSService",
 		"roblox-ts-flamework-template:out/shared/combat/projectiles/projectile-base@ProjectileBase": "shared/combat/projectiles/projectile-base@ProjectileBase",
-		"roblox-ts-flamework-template:out/shared/combat/skills/fireball@Fireball": "shared/combat/skills/fireball@Fireball"
+		"roblox-ts-flamework-template:out/shared/combat/skills/fireball@Fireball": "shared/combat/skills/fireball@Fireball",
+		"roblox-ts-flamework-template:out/shared/combat/status-effects/poisoned@Poisoned": "shared/combat/status-effects/poisoned@Poisoned",
+		"roblox-ts-flamework-template:out/shared/combat/skills/lake-of-decay@LakeOfDecay": "shared/combat/skills/lake-of-decay@LakeOfDecay",
+		"roblox-ts-flamework-template:out/server/components/poison-zone@PoisonZone": "server/components/poison-zone@PoisonZone",
+		"roblox-ts-flamework-template:out/client/components/ui/dialog-box@DialogBoxComponent": "client/components/ui/dialog-box@DialogBoxComponent",
+		"roblox-ts-flamework-template:out/client/controllers/ui/dialog-controller@DialogController": "client/controllers/ui/dialog-controller@DialogController",
+		"roblox-ts-flamework-template:out/client/controllers/ui/dialog-test-controller@DialogTestController": "client/controllers/ui/dialog-test-controller@DialogTestController",
+		"roblox-ts-flamework-template:out/client/controllers/combat/wcs-controller@WCSController": "client/controllers/combat/wcs-controller@WCSController"
 	},
 	"metadata": {}
 }

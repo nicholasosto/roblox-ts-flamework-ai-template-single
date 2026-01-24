@@ -1,10 +1,9 @@
 import { Controller, OnStart } from "@flamework/core";
 import { Players, ReplicatedStorage, UserInputService } from "@rbxts/services";
-import { Character, CreateClient } from "@rbxts/wcs";
-import { MeleeAttack, Fireball } from "shared/combat/skills";
+import { Character, CreateClient, GetRegisteredSkillConstructor } from "@rbxts/wcs";
+import { createLogger } from "shared/utils";
 
-// Create WCS Client instance
-const wcsClient = CreateClient();
+const log = createLogger("controller:WCS");
 
 /**
  * WCS Combat Controller
@@ -12,19 +11,20 @@ const wcsClient = CreateClient();
  */
 @Controller()
 export class WCSController implements OnStart {
+	private wcsClient = CreateClient();
 	private localCharacter?: Character;
 
 	onStart() {
-		print("[WCSController] Starting...");
+		log.info("Starting...");
 
 		// Register skills directory (WCS needs to know where skills are)
-		wcsClient.RegisterDirectory(
+		this.wcsClient.RegisterDirectory(
 			ReplicatedStorage.WaitForChild("TS").WaitForChild("combat") as Folder,
 		);
 
 		// Start the WCS client
-		wcsClient.Start();
-		print("[WCSController] WCS Client started");
+		this.wcsClient.Start();
+		log.info("WCS Client started");
 
 		const localPlayer = Players.LocalPlayer;
 
@@ -41,7 +41,7 @@ export class WCSController implements OnStart {
 		// Set up input handling
 		this.setupInputHandling();
 
-		print("[WCSController] Initialized");
+		log.info("Initialized");
 	}
 
 	private onCharacterAdded(characterModel: Model) {
@@ -50,16 +50,16 @@ export class WCSController implements OnStart {
 			const wcsCharacter = Character.GetCharacterFromInstance(characterModel);
 			if (wcsCharacter) {
 				this.localCharacter = wcsCharacter;
-				print(`[WCSController] Found WCS Character for ${characterModel.Name}`);
+				log.info(`Found WCS Character for ${characterModel.Name}`);
 			} else {
 				// Retry after a short delay if not found
 				task.delay(0.5, () => {
 					const retryCharacter = Character.GetCharacterFromInstance(characterModel);
 					if (retryCharacter) {
 						this.localCharacter = retryCharacter;
-						print(`[WCSController] Found WCS Character on retry`);
+						log.info(`Found WCS Character on retry`);
 					} else {
-						warn("[WCSController] Could not find WCS Character");
+						log.warn("Could not find WCS Character");
 					}
 				});
 			}
@@ -91,39 +91,51 @@ export class WCSController implements OnStart {
 
 	private tryMeleeAttack() {
 		if (!this.localCharacter) {
-			warn("[WCSController] No local WCS character");
+			log.warn("No local WCS character");
 			return;
 		}
 
-		// Get the MeleeAttack skill from the character
+		// Get the MeleeAttack skill from the character using registered constructor
+		const MeleeAttack = GetRegisteredSkillConstructor("MeleeAttack");
+		if (!MeleeAttack) {
+			log.warn("MeleeAttack not registered");
+			return;
+		}
+
 		const meleeSkill = this.localCharacter.GetSkillFromConstructor(MeleeAttack);
 
 		if (!meleeSkill) {
-			warn("[WCSController] MeleeAttack skill not found on character");
+			log.warn("MeleeAttack skill not found on character");
 			return;
 		}
 
 		// Start the skill (automatically sends request to server)
 		meleeSkill.Start();
-		print("[WCSController] Started MeleeAttack");
+		log.info("Started MeleeAttack");
 	}
 
 	private tryFireball() {
 		if (!this.localCharacter) {
-			warn("[WCSController] No local WCS character");
+			log.warn("No local WCS character");
 			return;
 		}
 
-		// Get the Fireball skill from the character
+		// Get the Fireball skill from the character using registered constructor
+		const Fireball = GetRegisteredSkillConstructor("Fireball");
+		if (!Fireball) {
+			log.warn("Fireball not registered");
+			return;
+		}
+
 		const fireballSkill = this.localCharacter.GetSkillFromConstructor(Fireball);
 
 		if (!fireballSkill) {
-			warn("[WCSController] Fireball skill not found on character");
+			log.warn("Fireball skill not found on character");
 			return;
 		}
 
 		// Start the skill (automatically sends request to server)
 		fireballSkill.Start();
-		print("[WCSController] Started Fireball");
+		log.info("Started Fireball");
 	}
 }

@@ -1,13 +1,14 @@
 import { Service, OnStart } from "@flamework/core";
 import { Players, ReplicatedStorage } from "@rbxts/services";
-import { Character, DamageContainer, CreateServer } from "@rbxts/wcs";
-import { MeleeAttack, Fireball } from "shared/combat/skills";
+import {
+	Character,
+	DamageContainer,
+	CreateServer,
+	GetRegisteredSkillConstructor,
+} from "@rbxts/wcs";
 import { createLogger } from "shared/utils/logger";
 
 const logger = createLogger("WCSService");
-
-// Create WCS Server instance
-const wcsServer = CreateServer();
 
 /**
  * WCS Combat Service
@@ -15,16 +16,19 @@ const wcsServer = CreateServer();
  */
 @Service()
 export class WCSService implements OnStart {
+	private wcsServer = CreateServer();
+
 	onStart() {
 		logger.info("WCS Service starting...");
 
 		// Register skills directory (WCS needs to know where skills are)
-		wcsServer.RegisterDirectory(
+		// This will scan the folder and run SkillDecorator on all skills
+		this.wcsServer.RegisterDirectory(
 			ReplicatedStorage.WaitForChild("TS").WaitForChild("combat") as Folder,
 		);
 
 		// Start the WCS server - MUST be called before creating characters
-		wcsServer.Start();
+		this.wcsServer.Start();
 		logger.info("WCS Server started");
 
 		// Set up character creation for players
@@ -56,9 +60,23 @@ export class WCSService implements OnStart {
 
 		logger.info(`Created WCS Character for ${characterModel.Name}`);
 
-		// Give the character combat skills
-		new MeleeAttack(wcsCharacter);
-		new Fireball(wcsCharacter);
+		// Give the character combat skills using registered constructors
+		// Skills are registered by SkillDecorator when RegisterDirectory scans them
+		const MeleeAttack = GetRegisteredSkillConstructor("MeleeAttack");
+		const Fireball = GetRegisteredSkillConstructor("Fireball");
+
+		if (MeleeAttack) {
+			new MeleeAttack(wcsCharacter);
+		} else {
+			logger.warn("MeleeAttack skill not registered");
+		}
+
+		if (Fireball) {
+			new Fireball(wcsCharacter);
+		} else {
+			logger.warn("Fireball skill not registered");
+		}
+
 		logger.info(`Applied combat skills to ${characterModel.Name}`);
 
 		// Clean up on death
