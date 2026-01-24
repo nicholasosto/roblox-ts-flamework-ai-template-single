@@ -5,7 +5,15 @@
 		"roblox-ts-flamework-template:out/shared/network/flamework-remotes@GlobalEvents": "shared/network/flamework-remotes@GlobalEvents",
 		"roblox-ts-flamework-template:out/shared/network/flamework-remotes@GlobalFunctions": "shared/network/flamework-remotes@GlobalFunctions",
 		"roblox-ts-flamework-template:out/server/player-profile-service@PlayerProfileService": "server/player-profile-service@PlayerProfileService",
-		"roblox-ts-flamework-template:out/server/services/player-profile-service@PlayerProfileService": "server/services/player-profile-service@PlayerProfileService"
+		"roblox-ts-flamework-template:out/server/services/player-profile-service@PlayerProfileService": "server/services/player-profile-service@PlayerProfileService",
+		"roblox-ts-flamework-template:out/client/components/ui/screen-button@ScreenButton": "client/components/ui/screen-button@ScreenButton",
+		"roblox-ts-flamework-template:out/client/components/ui/game-screen@GameScreen": "client/components/ui/game-screen@GameScreen",
+		"roblox-ts-flamework-template:out/client/controllers/ui/ui-controller@UIController": "client/controllers/ui/ui-controller@UIController",
+		"roblox-ts-flamework-template:out/shared/combat/skills/melee-attack@MeleeAttack": "shared/combat/skills/melee-attack@MeleeAttack",
+		"roblox-ts-flamework-template:out/client/controllers/wcs-controller@WCSController": "client/controllers/wcs-controller@WCSController",
+		"roblox-ts-flamework-template:out/server/services/wcs-service@WCSService": "server/services/wcs-service@WCSService",
+		"roblox-ts-flamework-template:out/shared/combat/projectiles/projectile-base@ProjectileBase": "shared/combat/projectiles/projectile-base@ProjectileBase",
+		"roblox-ts-flamework-template:out/shared/combat/skills/fireball@Fireball": "shared/combat/skills/fireball@Fireball"
 	},
 	"metadata": {}
 }
