@@ -1,8 +1,8 @@
 import { BaseComponent, Component } from "@flamework/components";
 import { OnStart } from "@flamework/core";
-import { ScreenButtonAttributes, ScreenKey } from "shared/types/ui-types";
-import { UIController } from "client/controllers/ui/ui-controller";
+import { ScreenKey } from "shared/types/ui-types";
 import { createLogger } from "shared/utils";
+import { ClientSignals } from "../../../shared/network/client-network";
 
 const log = createLogger("component:ScreenButton");
 
@@ -14,7 +14,15 @@ const log = createLogger("component:ScreenButton");
  *
  * Clicking the button will toggle the corresponding screen.
  */
-@Component({ tag: "ScreenButton" })
+interface ScreenButtonAttributes {
+	screenKey: ScreenKey;
+}
+@Component({
+	tag: "ScreenButton",
+	defaults: {
+		screenKey: "Inventory",
+	},
+})
 export class ScreenButton
 	extends BaseComponent<ScreenButtonAttributes, ImageButton | TextButton>
 	implements OnStart
@@ -22,14 +30,11 @@ export class ScreenButton
 	/** The screen key this button controls */
 	public readonly screenKey: ScreenKey = this.attributes.screenKey;
 
-	constructor(private uiController: UIController) {
-		super();
-	}
-
 	onStart(): void {
 		// Connect button click to toggle screen
 		this.instance.Activated.Connect(() => {
-			this.uiController.toggleScreen(this.screenKey);
+			const key = this.attributes.screenKey as ScreenKey;
+			ClientSignals.toggleScreenRequest.Fire(key);
 		});
 
 		log.info(`Registered: ${this.screenKey}`);

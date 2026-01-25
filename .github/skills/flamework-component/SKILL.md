@@ -7,6 +7,16 @@
 - Need to attach logic to specific instances in the workspace
 - Managing component lifecycle (creation, updates, destruction)
 
+## Design Philosophy
+
+**PREFER LIGHTWEIGHT, MINIMAL IMPLEMENTATIONS:**
+
+1. **Components own their own state** - Let the instance/attributes be the source of truth
+2. **Self-contained** - Components should manage themselves, not rely on external controllers tracking them
+3. **Reactive** - Use `onAttributeChanged()` instead of polling or external state
+4. **Minimal API** - Expose only what other systems genuinely need
+5. **Clean lifecycle** - Setup in `onStart()`, cleanup in `destroy()`, nothing else
+
 ## Core Concepts
 
 ### What is a Component?
@@ -355,6 +365,8 @@ Example in Studio:
 ## Key Takeaways
 
 - Components attach logic to specific instances via CollectionService tags
+- **Components own their state** - don't duplicate in controllers
+- **Self-contained** - components manage themselves
 - Always define an **Attributes interface** for type safety
 - Specify the **instance type** as the second generic parameter
 - Use `onAttributeChanged()` to react to attribute updates

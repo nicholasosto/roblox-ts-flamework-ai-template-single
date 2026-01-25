@@ -20,7 +20,10 @@
 		"roblox-ts-flamework-template:out/client/components/ui/dialog-box@DialogBoxComponent": "client/components/ui/dialog-box@DialogBoxComponent",
 		"roblox-ts-flamework-template:out/client/controllers/ui/dialog-controller@DialogController": "client/controllers/ui/dialog-controller@DialogController",
 		"roblox-ts-flamework-template:out/client/controllers/ui/dialog-test-controller@DialogTestController": "client/controllers/ui/dialog-test-controller@DialogTestController",
-		"roblox-ts-flamework-template:out/client/controllers/combat/wcs-controller@WCSController": "client/controllers/combat/wcs-controller@WCSController"
+		"roblox-ts-flamework-template:out/client/controllers/combat/wcs-controller@WCSController": "client/controllers/combat/wcs-controller@WCSController",
+		"roblox-ts-flamework-template:out/client/controllers/ui/ui-controller-new@UIControllerNew": "client/controllers/ui/ui-controller-new@UIControllerNew",
+		"roblox-ts-flamework-template:out/client/controllers/ui/ui-controller-old@UIController": "client/controllers/ui/ui-controller-old@UIController",
+		"roblox-ts-flamework-template:out/client/controllers/ui/ui-controller@UIControllerNew": "client/controllers/ui/ui-controller@UIControllerNew"
 	},
 	"metadata": {}
 }

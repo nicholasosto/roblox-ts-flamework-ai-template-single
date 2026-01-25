@@ -7,6 +7,16 @@
 - Setting up dependency injection between services
 - Working with server-side lifecycle methods
 
+## Design Philosophy
+
+**PREFER LIGHTWEIGHT, MINIMAL IMPLEMENTATIONS:**
+
+1. **Single responsibility** - Each service does ONE thing well
+2. **Signal-driven** - Use Signals and Events, avoid polling loops
+3. **Framework features first** - Use Flamework's DI and networking, don't reinvent
+4. **Minimal state** - Only track what you can't query from the source of truth
+5. **Start simple** - Add complexity only when genuinely needed
+
 ## Core Concepts
 
 ### What is a Service?
@@ -230,6 +240,8 @@ this.gameStateChanged.Connect((newState) => {
 ## Key Takeaways
 
 - Services are **server-only** singletons
+- **Start minimal** - add features only when needed
+- **Single responsibility** - one service, one purpose
 - Use **dependency injection** for service dependencies
 - Use **Signals** for events, not polling
 - Keep constructors lightweight

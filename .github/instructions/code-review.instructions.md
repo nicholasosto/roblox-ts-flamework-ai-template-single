@@ -4,6 +4,28 @@ applyTo: "**/*.ts"
 
 # Code Review Checklist for Roblox-TS + Flamework
 
+## Code Philosophy
+
+- [ ] **Prefer lightweight, minimal implementations**
+    - Start simple, add complexity only when needed
+    - Avoid premature optimization or over-engineering
+    - Fewer lines of code = fewer bugs
+
+- [ ] **Leverage framework features over custom state management**
+    - Use Flamework's `Components.getAllComponents()` for discovery
+    - Use `ClientSignals` / `ServerSignals` for event-driven architecture
+    - Prefer querying components on-demand over caching
+
+- [ ] **Stateless when possible**
+    - Avoid tracking state that the framework already tracks
+    - Query current state from source of truth (components, instances)
+    - Only cache when performance genuinely requires it
+
+- [ ] **Signal-driven architecture**
+    - Use `@rbxts/signal` or `ClientSignals` to trigger actions
+    - Avoid polling loops and manual state synchronization
+    - Let events flow through the system
+
 ## Roblox API Usage
 
 - [ ] **Not manually destroying auto-destroyed instances**

@@ -7,11 +7,58 @@
 - Handling player input on the client
 - Working with client-side lifecycle methods
 
+## Design Philosophy
+
+**PREFER LIGHTWEIGHT, MINIMAL IMPLEMENTATIONS:**
+
+1. **Stateless over stateful** - Query components/instances on-demand instead of caching
+2. **Signal-driven** - Use `ClientSignals` to trigger actions, not manual state tracking
+3. **Framework features first** - Use `Components.getAllComponents()` instead of custom registries
+4. **Simple over clever** - Start minimal, add complexity only when genuinely needed
+
 ## Core Concepts
 
 ### What is a Controller?
 
 A Flamework Controller is a **client-only** singleton class that handles client-side game logic, UI management, and player interactions. Controllers are the client-side equivalent of Services.
+
+### Minimal Controller Pattern (Preferred)
+
+```typescript
+import { Controller, OnStart } from "@flamework/core";
+import { Components } from "@flamework/components";
+import { ClientSignals } from "shared/network/client-network";
+import { GameScreen } from "client/components/ui";
+import { ScreenKey } from "shared/types";
+
+@Controller()
+export class UIController implements OnStart {
+	constructor(private components: Components) {}
+
+	onStart(): void {
+		// Register signal handlers - that's it!
+		ClientSignals.toggleScreenRequest.Connect((screenKey?: ScreenKey) => this.onToggleScreen(screenKey));
+	}
+
+	private onToggleScreen(screenKey?: ScreenKey): void {
+		// Query components on-demand - no caching needed
+		this.components.getAllComponents<GameScreen>().forEach((screen) => {
+			if (screenKey === screen.screenKey) {
+				screen.isVisible() ? screen.hide() : screen.show();
+			} else {
+				screen.hide();
+			}
+		});
+	}
+}
+```
+
+### Why This Pattern?
+
+- **No state to track** - Components know their own visibility
+- **No cache to invalidate** - Fresh query every time
+- **Signal-driven** - External systems fire signals, controller reacts
+- **~30 lines** vs 200+ for a stateful implementation
 
 ### Basic Controller Pattern
 
@@ -282,6 +329,42 @@ export class PlayerDataController implements OnStart {
 
 ## Anti-Patterns to Avoid
 
+### ❌ Over-engineered State Management
+
+```typescript
+// BAD - Too much internal state when components track their own
+@Controller()
+export class OverEngineeredUIController {
+	private currentScreen: ScreenKey | undefined;
+	private screens = new Map<ScreenKey, GameScreen>();
+	public readonly screenChanged = new Signal();
+	public readonly screenOpened = new Signal();
+	public readonly screenClosed = new Signal();
+
+	// 200+ lines of state management...
+}
+```
+
+### ✅ Query On-Demand, Let Components Own State
+
+```typescript
+// GOOD - Stateless, signal-driven, minimal
+@Controller()
+export class LightweightUIController {
+	constructor(private components: Components) {}
+
+	onStart(): void {
+		ClientSignals.toggleScreenRequest.Connect((key) => this.toggle(key));
+	}
+
+	private toggle(key?: ScreenKey): void {
+		this.components.getAllComponents<GameScreen>().forEach((screen) => {
+			key === screen.screenKey ? screen.toggle() : screen.hide();
+		});
+	}
+}
+```
+
 ### ❌ Heavy Logic in Constructor
 
 ```typescript
@@ -386,6 +469,9 @@ onStart() {
 ## Key Takeaways
 
 - Controllers are **client-only** singletons
+- **Start minimal** - add complexity only when needed
+- **Prefer stateless** - query components on-demand
+- **Signal-driven** - react to `ClientSignals`, don't poll
 - Use **dependency injection** for controller dependencies
 - Handle player input and UI in controllers
 - Use client-side networking to communicate with server

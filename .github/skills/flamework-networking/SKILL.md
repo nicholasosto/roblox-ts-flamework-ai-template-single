@@ -7,6 +7,16 @@
 - Sending data between client and server
 - Debugging networking issues
 
+## Design Philosophy
+
+**PREFER LIGHTWEIGHT, SIGNAL-DRIVEN ARCHITECTURE:**
+
+1. **Events over state sync** - Fire events when things change, don't poll for state
+2. **Thin handlers** - Network handlers should validate and delegate, not contain logic
+3. **Minimal payloads** - Send only what's needed, derive the rest
+4. **ClientSignals for local events** - Use client-side signals to decouple UI from networking
+5. **Single source of truth** - Define once in shared, import everywhere
+
 ## Core Concepts
 
 ### Flamework Networking Architecture
@@ -407,7 +417,10 @@ Events.combat.attack.fire(new Vector3(0, 0, 0)); // Works!
 - Define networking interfaces in **ONE** file (flamework-remotes.ts)
 - Create server and client exports in separate files
 - **Never** call `createServer()` or `createClient()` more than once
+- **Events over polling** - fire when things change
+- **Thin handlers** - validate and delegate, don't embed logic
 - Use **namespaces** to organize events by feature
+- Use **ClientSignals** to decouple local UI from network events
 - Always handle errors when calling functions
 - Can't send Roblox instances over network - send data instead
 - Server can broadcast to all, specific players, or all except one
