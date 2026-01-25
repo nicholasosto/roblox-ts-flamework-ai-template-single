@@ -2,7 +2,8 @@ import { ABILITY_CATALOG } from "./ability-catalog";
 import { EQUIPMENT_CATALOG } from "./equipment-catalog";
 import { SOUL_GEM_CATALOG } from "./soul-gem-catalog";
 
-export function getCatalogEntryById(catalogId: string) {
+export function getCatalogEntryById(catalogId?: string) {
+	if (!catalogId) return undefined;
 	if (ABILITY_CATALOG[catalogId]) {
 		return ABILITY_CATALOG[catalogId];
 	} else if (EQUIPMENT_CATALOG[catalogId]) {

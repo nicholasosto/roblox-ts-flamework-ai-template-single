@@ -2,6 +2,7 @@ import { Controller, OnStart } from "@flamework/core";
 import { Players, ReplicatedStorage, UserInputService } from "@rbxts/services";
 import { Character, CreateClient, GetRegisteredSkillConstructor } from "@rbxts/wcs";
 import { createLogger } from "shared/utils";
+import { ClientSignals } from "../../../shared/network/client-network";
 
 const log = createLogger("controller:WCS");
 
@@ -18,9 +19,7 @@ export class WCSController implements OnStart {
 		log.info("Starting...");
 
 		// Register skills directory (WCS needs to know where skills are)
-		this.wcsClient.RegisterDirectory(
-			ReplicatedStorage.WaitForChild("TS").WaitForChild("combat") as Folder,
-		);
+		this.wcsClient.RegisterDirectory(ReplicatedStorage.WaitForChild("TS").WaitForChild("combat") as Folder);
 
 		// Start the WCS client
 		this.wcsClient.Start();
@@ -87,6 +86,23 @@ export class WCSController implements OnStart {
 				this.tryFireball();
 			}
 		});
+		ClientSignals.itemUseRequest.Connect((catalogId: string) => {
+			this.startAbilityByName(catalogId);
+		});
+	}
+
+	private startAbilityByName(abilityName: string) {
+		if (!this.localCharacter) {
+			log.warn("No local WCS character");
+			return;
+		}
+		const skill = this.localCharacter.GetSkillFromString(abilityName);
+		if (!skill) {
+			log.warn(`Ability not found on character: ${abilityName}`);
+			return;
+		}
+		skill.Start();
+		log.info(`Started ability: ${abilityName}`);
 	}
 
 	private tryMeleeAttack() {

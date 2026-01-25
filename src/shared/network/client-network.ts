@@ -14,7 +14,7 @@ export const ClientSignals = {
 	onExampleEvent: new Signal<[data: string]>(),
 
 	// Inventory item actions
-	itemUseRequest: new Signal<[itemId: string]>(),
+	itemUseRequest: new Signal<[catalogId: string]>(),
 	itemEquipRequest: new Signal<[itemId: string]>(),
 	itemUnequipRequest: new Signal<[itemId: string]>(),
 	itemPurchaseRequest: new Signal<[itemId: string]>(),

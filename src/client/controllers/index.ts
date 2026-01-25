@@ -8,3 +8,6 @@ export * from "./combat";
 
 // UI controllers
 export * from "./ui";
+
+// Inventory controllers
+export * from "./inventory";

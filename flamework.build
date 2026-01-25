@@ -29,7 +29,10 @@
 		"roblox-ts-flamework-template:out/client/components/ui/item-grid-button@ScreenButton": "client/components/ui/item-grid-button@ScreenButton",
 		"roblox-ts-flamework-template:out/client/components/ui/item-grid-button@GridFilterButton": "client/components/ui/item-grid-button@GridFilterButton",
 		"roblox-ts-flamework-template:out/client/components/ui/filter-grid-button@GridFilterButton": "client/components/ui/filter-grid-button@GridFilterButton",
-		"roblox-ts-flamework-template:out/server/services/inventory-service@InventoryService": "server/services/inventory-service@InventoryService"
+		"roblox-ts-flamework-template:out/server/services/inventory-service@InventoryService": "server/services/inventory-service@InventoryService",
+		"roblox-ts-flamework-template:out/client/controllers/inventory/inventory-controller@InventoryController": "client/controllers/inventory/inventory-controller@InventoryController",
+		"roblox-ts-flamework-template:out/client/controllers/inventory/inventory-test-controller@InventoryTestController": "client/controllers/inventory/inventory-test-controller@InventoryTestController",
+		"roblox-ts-flamework-template:out/client/components/ui/grid-item-component@GridItemComponent": "client/components/ui/grid-item-component@GridItemComponent"
 	},
 	"metadata": {}
 }

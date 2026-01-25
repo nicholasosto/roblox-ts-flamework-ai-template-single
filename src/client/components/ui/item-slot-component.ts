@@ -106,6 +106,7 @@ export class ItemSlotComponent extends BaseComponent<ItemSlotAttributes, ItemSlo
 	}
 
 	public setItem(item: OwnedItem): void {
+		logger.warn(`Setting item in slot ${this.attributes.slotKey}: ${item.UUID}`);
 		this.attributes.itemId = item.UUID;
 		this.attributes.catalogId = item.CatalogId;
 		this.attributes.itemId = item.UUID;
@@ -192,7 +193,7 @@ export class ItemSlotComponent extends BaseComponent<ItemSlotAttributes, ItemSlo
 			ClientSignals.itemSlotSelected.Fire(this.attributes.slotKey);
 			return;
 		} else if (this.attributes.slotMode === "Activate") {
-			ClientSignals.itemUseRequest.Fire(this.attributes.itemId ?? "");
+			ClientSignals.itemUseRequest.Fire(this.attributes.catalogId ?? "");
 		}
 
 		// Start cooldown if ability has one

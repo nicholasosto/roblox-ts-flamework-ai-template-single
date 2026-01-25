@@ -1,0 +1,279 @@
+import { Controller, OnStart } from "@flamework/core";
+import { Components } from "@flamework/components";
+import { createLogger } from "shared/utils";
+import { Events, ClientSignals } from "shared/network/client-network";
+import { OwnedItem, SlotKey, ItemCategory, getCategoryForSlot } from "shared/interfaces";
+import { ItemSlotComponent } from "../../components/ui/item-slot-component";
+
+const logger = createLogger("controller:Inventory");
+
+/**
+ * InventoryController
+ *
+ * Client-side controller for inventory state and UI reconciliation.
+ * Responsibilities:
+ * - Cache backpack state from server sync
+ * - Reconcile UI components when backpack changes
+ * - Send equip/unequip/purchase requests to server
+ * - Track selected slot for grid filtering
+ *
+ * Design:
+ * - Stateless UI queries via Components.getAllComponents()
+ * - Signal-driven updates from server events
+ * - Full backpack sync model (no incremental updates)
+ */
+@Controller({})
+export class InventoryController implements OnStart {
+	// Local cache of backpack (updated by server sync)
+	private backpack: OwnedItem[] = [];
+
+	// Currently selected slot (for filtering and equip target)
+	private selectedSlotKey?: SlotKey;
+
+	constructor(private components: Components) {}
+
+	onStart(): void {
+		this.registerNetworkEvents();
+		this.registerClientSignals();
+		logger.info("InventoryController started");
+	}
+
+	/* ================================================================
+	   Network Event Handlers
+	   ================================================================ */
+
+	private registerNetworkEvents(): void {
+		// Full backpack sync from server
+		Events.inventory.backpackSync.connect((backpack) => {
+			this.onBackpackSync(backpack);
+		});
+
+		// Purchase result feedback
+		Events.inventory.purchaseResult.connect((success, catalogId, message) => {
+			if (success) {
+				logger.info(`Purchase successful: ${catalogId}`);
+			} else {
+				logger.warn(`Purchase failed: ${catalogId} - ${message ?? "Unknown error"}`);
+			}
+			// TODO: Show UI notification
+		});
+	}
+
+	private registerClientSignals(): void {
+		// Slot selected - track for filtering and equip target
+		ClientSignals.itemSlotSelected.Connect((slotKey) => {
+			this.onSlotSelected(slotKey);
+		});
+
+		// Item selected from grid - equip to selected slot
+		ClientSignals.itemSelected.Connect((itemId) => {
+			this.onItemSelected(itemId);
+		});
+
+		// Equip request from UI
+		ClientSignals.itemEquipRequest.Connect((itemId) => {
+			if (this.selectedSlotKey) {
+				this.requestEquip(itemId, this.selectedSlotKey);
+			} else {
+				logger.warn("No slot selected for equip");
+			}
+		});
+
+		// Unequip request from UI
+		ClientSignals.itemUnequipRequest.Connect((itemId) => {
+			const item = this.getItemById(itemId);
+			if (item && item.CurrentSlotKey !== "Backpack") {
+				this.requestUnequip(item.CurrentSlotKey);
+			}
+		});
+
+		// Purchase request from UI
+		ClientSignals.itemPurchaseRequest.Connect((catalogId) => {
+			this.requestPurchase(catalogId);
+		});
+	}
+
+	/* ================================================================
+	   Backpack Sync & UI Reconciliation
+	   ================================================================ */
+
+	private onBackpackSync(backpack: OwnedItem[]): void {
+		logger.info(`Backpack sync received: ${backpack.size()} items`);
+		this.backpack = backpack;
+
+		// Reconcile all UI components
+		this.reconcileSlotComponents();
+		this.reconcileGridComponents();
+
+		// Notify any listeners that inventory changed
+		ClientSignals.filterGridRequest.Fire(undefined); // Refresh grid display
+	}
+
+	/**
+	 * Update all ItemSlotComponents based on current backpack state
+	 * Each slot finds the item where CurrentSlotKey matches
+	 */
+	private reconcileSlotComponents(): void {
+		// Index items by their current slot
+		const itemsBySlot = new Map<SlotKey | "Backpack", OwnedItem>();
+		for (const item of this.backpack) {
+			// For equipped slots, store the item (only one per slot)
+			if (item.CurrentSlotKey !== "Backpack") {
+				itemsBySlot.set(item.CurrentSlotKey, item);
+			}
+		}
+
+		// Update all slot components
+		this.components.getAllComponents<ItemSlotComponent>().forEach((component) => {
+			const slotKey = component.attributes.slotKey;
+			const itemForSlot = itemsBySlot.get(slotKey);
+
+			if (itemForSlot) {
+				component.setItem(itemForSlot);
+			} else {
+				component.clearItem();
+			}
+		});
+
+		logger.debug("Slot components reconciled");
+	}
+
+	/**
+	 * Update ItemGridComponents with current backpack items
+	 */
+	private reconcileGridComponents(): void {
+		// Grid components handle their own filtering via filterGridRequest signal
+		// This method can be expanded if grids need direct data injection
+		logger.debug("Grid components reconciled");
+	}
+
+	/* ================================================================
+	   Selection & Filtering
+	   ================================================================ */
+
+	private onSlotSelected(slotKey: SlotKey): void {
+		// Toggle selection if same slot clicked
+		if (this.selectedSlotKey === slotKey) {
+			this.selectedSlotKey = undefined;
+			this.clearSlotSelection();
+			ClientSignals.filterGridRequest.Fire(undefined); // Clear filter
+		} else {
+			this.selectedSlotKey = slotKey;
+			this.updateSlotSelection(slotKey);
+
+			// Filter grid by the category this slot accepts
+			const category = getCategoryForSlot(slotKey);
+			ClientSignals.filterGridRequest.Fire(category);
+		}
+
+		logger.debug(`Slot selected: ${this.selectedSlotKey ?? "none"}`);
+	}
+
+	private onItemSelected(itemId: string): void {
+		const item = this.getItemById(itemId);
+		if (!item) {
+			logger.warn(`Item not found: ${itemId}`);
+			return;
+		}
+
+		// If a slot is selected and item is compatible, equip it
+		if (this.selectedSlotKey) {
+			const expectedCategory = getCategoryForSlot(this.selectedSlotKey);
+			if (item.ItemCategory === expectedCategory) {
+				this.requestEquip(itemId, this.selectedSlotKey);
+			} else {
+				logger.warn(`Item category ${item.ItemCategory} doesn't match slot ${this.selectedSlotKey}`);
+			}
+		}
+	}
+
+	private updateSlotSelection(selectedSlot: SlotKey): void {
+		this.components.getAllComponents<ItemSlotComponent>().forEach((component) => {
+			component.setSelected(component.attributes.slotKey === selectedSlot);
+		});
+	}
+
+	private clearSlotSelection(): void {
+		this.components.getAllComponents<ItemSlotComponent>().forEach((component) => {
+			component.setSelected(false);
+		});
+	}
+
+	/* ================================================================
+	   Server Requests
+	   ================================================================ */
+
+	public requestEquip(itemId: string, slotKey: SlotKey): void {
+		logger.info(`Requesting equip: ${itemId} → ${slotKey}`);
+		Events.inventory.requestEquip.fire(itemId, slotKey);
+	}
+
+	public requestUnequip(slotKey: SlotKey): void {
+		logger.info(`Requesting unequip: ${slotKey}`);
+		Events.inventory.requestUnequip.fire(slotKey);
+	}
+
+	public requestPurchase(catalogId: string): void {
+		logger.info(`Requesting purchase: ${catalogId}`);
+		Events.inventory.requestPurchase.fire(catalogId);
+	}
+
+	public requestSell(itemId: string, quantity = 1): void {
+		logger.info(`Requesting sell: ${itemId} x${quantity}`);
+		Events.inventory.requestSell.fire(itemId, quantity);
+	}
+
+	/* ================================================================
+	   Query API (for UI components)
+	   ================================================================ */
+
+	/**
+	 * Get all items in backpack (including equipped)
+	 */
+	public getBackpackItems(): readonly OwnedItem[] {
+		return this.backpack;
+	}
+
+	/**
+	 * Get items filtered by category
+	 */
+	public getItemsByCategory(category: ItemCategory): OwnedItem[] {
+		return this.backpack.filter((item) => item.ItemCategory === category);
+	}
+
+	/**
+	 * Get items that are in the backpack (not equipped)
+	 */
+	public getUnequippedItems(): OwnedItem[] {
+		return this.backpack.filter((item) => item.CurrentSlotKey === "Backpack");
+	}
+
+	/**
+	 * Get item equipped to a specific slot
+	 */
+	public getEquippedItem(slotKey: SlotKey): OwnedItem | undefined {
+		return this.backpack.find((item) => item.CurrentSlotKey === slotKey);
+	}
+
+	/**
+	 * Get item by UUID
+	 */
+	public getItemById(itemId: string): OwnedItem | undefined {
+		return this.backpack.find((item) => item.UUID === itemId);
+	}
+
+	/**
+	 * Check if an item is equipped (not in backpack)
+	 */
+	public isItemEquipped(itemId: string): boolean {
+		const item = this.getItemById(itemId);
+		return item !== undefined && item.CurrentSlotKey !== "Backpack";
+	}
+
+	/**
+	 * Get currently selected slot key
+	 */
+	public getSelectedSlotKey(): SlotKey | undefined {
+		return this.selectedSlotKey;
+	}
+}

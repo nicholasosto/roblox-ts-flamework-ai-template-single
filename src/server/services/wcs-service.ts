@@ -3,17 +3,27 @@ import { Players, ReplicatedStorage } from "@rbxts/services";
 import { Character, DamageContainer, CreateServer, GetRegisteredSkillConstructor } from "@rbxts/wcs";
 import { createLogger } from "shared/utils/logger";
 import { ServerSignals } from "../../shared/network/server-network";
-import { OwnedItem } from "../../shared/interfaces";
+import { OwnedItem, ABILITY_SLOT_KEYS } from "../../shared/interfaces";
 
 const logger = createLogger("WCSService");
 
 /**
  * WCS Combat Service
- * Handles server-side WCS initialization and character management
+ * Handles server-side WCS initialization and character management.
+ *
+ * Skills are registered/deregistered dynamically based on equipped abilities.
+ * When an ability is equipped to an AbilitySlot, the corresponding WCS skill
+ * is instantiated on the character. When unequipped, it's destroyed.
  */
 @Service()
 export class WCSService implements OnStart {
 	private wcsServer = CreateServer();
+
+	// Track WCS Characters by player for skill management
+	private playerCharacters = new Map<Player, Character>();
+
+	// Track registered skills per player for diffing
+	private playerSkills = new Map<Player, Set<string>>();
 
 	onStart() {
 		logger.info("WCS Service starting...");
@@ -28,70 +38,139 @@ export class WCSService implements OnStart {
 
 		// Set up character creation for players
 		Players.PlayerAdded.Connect((player) => this.onPlayerAdded(player));
+		Players.PlayerRemoving.Connect((player) => this.onPlayerRemoving(player));
 
 		// Handle existing players (in case of late server start)
 		for (const player of Players.GetPlayers()) {
 			this.onPlayerAdded(player);
 		}
+
 		this.registerServerSignals();
 		logger.info("WCS Service initialized");
 	}
 
 	private registerServerSignals() {
-		// Example signal registration
-		// ServerSignals.onExampleEvent.Connect((data: string) => {
-		// 	logger.info(`Received example event with data: ${data}`);
-		// });
-
+		// Update skills when backpack changes
 		ServerSignals.backpackUpdated.Connect((player: Player, backpack: OwnedItem[]) => {
-			backpack.mapFiltered((item) => {
-				if (item.ItemCategory === "Ability") {
-					logger.info(`Player ${player.Name} has ability item: ${item.UUID} (Catalog: ${item.CatalogId})`);
-				}
-			});
+			this.updatePlayerSkills(player, backpack);
 		});
+	}
+
+	/**
+	 * Update player's WCS skills based on equipped abilities
+	 * Uses diffing to only add/remove changed skills
+	 */
+	private updatePlayerSkills(player: Player, backpack: OwnedItem[]): void {
+		const wcsCharacter = this.playerCharacters.get(player);
+		if (!wcsCharacter) {
+			logger.warn(`No WCS character for ${player.Name}, skipping skill update`);
+			return;
+		}
+
+		// Find all equipped abilities (in AbilitySlot1-5, not "Backpack")
+		const equippedAbilities = new Set<string>();
+		for (const item of backpack) {
+			if (item.ItemCategory === "Ability" && item.CurrentSlotKey !== "Backpack") {
+				// Verify it's actually in an ability slot
+				if (ABILITY_SLOT_KEYS.includes(item.CurrentSlotKey as (typeof ABILITY_SLOT_KEYS)[number])) {
+					equippedAbilities.add(item.CatalogId);
+				}
+			}
+		}
+
+		// Get previously registered skills
+		const previousSkills = this.playerSkills.get(player) ?? new Set<string>();
+
+		// Determine what to add and remove
+		const toAdd: string[] = [];
+		const toRemove: string[] = [];
+
+		for (const skillId of equippedAbilities) {
+			if (!previousSkills.has(skillId)) {
+				toAdd.push(skillId);
+			}
+		}
+
+		for (const skillId of previousSkills) {
+			if (!equippedAbilities.has(skillId)) {
+				toRemove.push(skillId);
+			}
+		}
+
+		// Remove unequipped skills
+		for (const skillId of toRemove) {
+			this.removeSkillFromCharacter(wcsCharacter, skillId);
+		}
+
+		// Add newly equipped skills
+		for (const skillId of toAdd) {
+			this.addSkillToCharacter(wcsCharacter, skillId);
+		}
+
+		// Update tracking
+		this.playerSkills.set(player, equippedAbilities);
+
+		if (toAdd.size() > 0 || toRemove.size() > 0) {
+			logger.info(`Updated skills for ${player.Name}: +[${toAdd.join(", ")}] -[${toRemove.join(", ")}]`);
+		}
+	}
+
+	private addSkillToCharacter(wcsCharacter: Character, skillId: string): void {
+		const SkillConstructor = GetRegisteredSkillConstructor(skillId);
+		if (SkillConstructor) {
+			new SkillConstructor(wcsCharacter);
+			logger.debug(`Added skill ${skillId} to ${wcsCharacter.Instance.Name}`);
+		} else {
+			logger.warn(`Skill constructor not found for: ${skillId}`);
+		}
+	}
+
+	private removeSkillFromCharacter(wcsCharacter: Character, skillId: string): void {
+		const SkillConstructor = GetRegisteredSkillConstructor(skillId);
+		if (SkillConstructor) {
+			const skill = wcsCharacter.GetSkillFromConstructor(SkillConstructor);
+			if (skill) {
+				skill.Destroy();
+				logger.debug(`Removed skill ${skillId} from ${wcsCharacter.Instance.Name}`);
+			}
+		}
 	}
 
 	private onPlayerAdded(player: Player) {
 		// Handle character spawning
 		player.CharacterAdded.Connect((characterModel) => {
-			this.setupCharacter(characterModel);
+			this.setupCharacter(player, characterModel);
 		});
 
 		// Handle existing character
 		if (player.Character) {
-			this.setupCharacter(player.Character);
+			this.setupCharacter(player, player.Character);
 		}
 	}
 
-	private setupCharacter(characterModel: Model) {
+	private onPlayerRemoving(player: Player) {
+		// Clean up tracking
+		this.playerCharacters.delete(player);
+		this.playerSkills.delete(player);
+		logger.debug(`Cleaned up WCS state for ${player.Name}`);
+	}
+
+	private setupCharacter(player: Player, characterModel: Model) {
 		// Create WCS Character wrapper
 		const wcsCharacter = new Character(characterModel);
+		this.playerCharacters.set(player, wcsCharacter);
+		this.playerSkills.set(player, new Set());
 
 		logger.info(`Created WCS Character for ${characterModel.Name}`);
 
-		// Give the character combat skills using registered constructors
-		// Skills are registered by SkillDecorator when RegisterDirectory scans them
-		const MeleeAttack = GetRegisteredSkillConstructor("MeleeAttack");
-		const Fireball = GetRegisteredSkillConstructor("Fireball");
-
-		if (MeleeAttack) {
-			new MeleeAttack(wcsCharacter);
-		} else {
-			logger.warn("MeleeAttack skill not registered");
-		}
-
-		if (Fireball) {
-			new Fireball(wcsCharacter);
-		} else {
-			logger.warn("Fireball skill not registered");
-		}
-
-		logger.info(`Applied combat skills to ${characterModel.Name}`);
+		// NOTE: Skills are now added via backpackUpdated signal from InventoryService
+		// No default skills are added here - they come from equipped abilities
 
 		// Clean up on death
 		const humanoid = characterModel.WaitForChild("Humanoid") as Humanoid;
 		humanoid.Died.Once(() => {
+			this.playerCharacters.delete(player);
+			this.playerSkills.delete(player);
 			wcsCharacter.Destroy();
 			logger.info(`Destroyed WCS Character for ${characterModel.Name}`);
 		});
