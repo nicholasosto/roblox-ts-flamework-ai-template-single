@@ -1,4 +1,4 @@
-import { ItemCategory, SlotKey } from "../interfaces";
+import { ItemCategory, OwnedItem, SlotKey } from "../interfaces";
 import { ScreenKey } from "../types";
 import { GlobalEvents, GlobalFunctions } from "./flamework-remotes";
 import Signal from "@rbxts/sleitnick-signal";
@@ -10,25 +10,23 @@ import Signal from "@rbxts/sleitnick-signal";
  */
 
 export const ClientSignals = {
-	// Structured example signal
-	onExampleEvent: new Signal<[data: string]>(),
-
 	// Inventory item actions
 	itemUseRequest: new Signal<[catalogId: string]>(),
-	itemEquipRequest: new Signal<[itemId: string]>(),
-	itemUnequipRequest: new Signal<[itemId: string]>(),
-	itemPurchaseRequest: new Signal<[itemId: string]>(),
+	itemPurchaseRequest: new Signal<[catalogId: string]>(),
 
 	// UI Events
 	itemSelected: new Signal<[itemId: string]>(),
-	itemSlotSelected: new Signal<[itemSlotComponent: SlotKey]>(),
+	itemSlotSelected: new Signal<[slotKey: SlotKey]>(),
 
-	// Grid Events
-	filterGridRequest: new Signal<[itemCategory?: ItemCategory]>(),
-	sortGridRequest: new Signal<[]>(),
+	// Grid Events - items are passed directly to avoid duplicate caching
+	updateGridItems: new Signal<[items: OwnedItem[], filter?: ItemCategory]>(),
+	setCategoryFilter: new Signal<[category: ItemCategory]>(),
 
 	// Toggle Screen
 	toggleScreenRequest: new Signal<[screenName?: ScreenKey]>(),
+
+	// Toggle Canvas
+	toggleCanvasRequest: new Signal<[canvasName?: string]>(),
 };
 export const Events = GlobalEvents.createClient({});
 export const Functions = GlobalFunctions.createClient({});

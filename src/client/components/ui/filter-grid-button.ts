@@ -27,10 +27,10 @@ export class GridFilterButton extends BaseComponent<GridControlBtnAttributes, Im
 	/** The category key this button controls */
 
 	onStart(): void {
-		// Connect button click to toggle screen
+		// Connect button click to filter grid by category
 		this.instance.Activated.Connect(() => {
-			const key = this.attributes.categoryKey as ItemCategory;
-			ClientSignals.filterGridRequest.Fire(key);
+			const category = this.attributes.categoryKey;
+			ClientSignals.setCategoryFilter.Fire(category);
 		});
 		logger.info(`Registered filter button for category: ${this.attributes.categoryKey}`);
 	}

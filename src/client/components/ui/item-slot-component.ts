@@ -39,7 +39,6 @@ type ItemSlotType = Frame & {
 
 export interface ItemSlotAttributes {
 	slotMode: "Activate" | "Select";
-	slotType: string;
 	slotKey: SlotKey;
 	catalogId?: string;
 	itemId?: string;
@@ -56,7 +55,6 @@ const DEFAULT_STROKE_COLOR = Color3.fromRGB(60, 60, 60);
 	tag: "ItemSlotComponent",
 	defaults: {
 		slotMode: "Select",
-		slotType: "Equipment",
 		slotKey: "HeadSlot",
 		catalogId: "demonic_halo",
 		quantity: 1,
@@ -71,10 +69,6 @@ export class ItemSlotComponent extends BaseComponent<ItemSlotAttributes, ItemSlo
 	private cooldownDuration = 0;
 
 	onStart(): void {
-		// Reactive attribute bindings
-		this.onAttributeChanged("catalogId", () => this.render());
-		this.onAttributeChanged("isSelected", () => this.renderSelectedState());
-
 		// Slot activation
 		this.instance.SlotButton.Activated.Connect(() => this.handleActivation());
 
@@ -106,10 +100,9 @@ export class ItemSlotComponent extends BaseComponent<ItemSlotAttributes, ItemSlo
 	}
 
 	public setItem(item: OwnedItem): void {
-		logger.warn(`Setting item in slot ${this.attributes.slotKey}: ${item.UUID}`);
+		logger.debug(`Setting item in slot ${this.attributes.slotKey}: ${item.UUID}`);
 		this.attributes.itemId = item.UUID;
 		this.attributes.catalogId = item.CatalogId;
-		this.attributes.itemId = item.UUID;
 		this.attributes.quantity = item.Qty;
 		this.render();
 	}

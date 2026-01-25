@@ -2,7 +2,7 @@ import { BaseComponent, Component } from "@flamework/components";
 import { OnStart } from "@flamework/core";
 import { createLogger } from "shared/utils";
 import { getCatalogEntryById } from "shared/catalogs";
-import { RARITY_COLORS, OwnedItem } from "shared/interfaces";
+import { RARITY_COLORS, OwnedItem, RarityKey } from "shared/interfaces";
 import { ClientSignals } from "shared/network/client-network";
 import { GridItemInstance, GridItemComponentTag } from "shared/roblox-templates/ui-elements/grid-item";
 
@@ -40,14 +40,10 @@ export interface GridItemAttributes {
 	},
 })
 export class GridItemComponent extends BaseComponent<GridItemAttributes, GridItemInstance> implements OnStart {
-	onStart(): void {
-		// Reactive attribute bindings
-		this.onAttributeChanged("catalogId", () => this.render());
-		this.onAttributeChanged("isEquipped", () => this.renderEquippedState());
-		this.onAttributeChanged("isSelected", () => this.renderSelectedState());
-		this.onAttributeChanged("isLocked", () => this.renderLockedState());
-		this.onAttributeChanged("quantity", () => this.renderQuantity());
+	// Cache rarity to avoid repeated lookups
+	private cachedRarity?: RarityKey;
 
+	onStart(): void {
 		// Click handler - fires itemSelected signal
 		this.instance.ItemButton.Activated.Connect(() => this.handleClick());
 
@@ -63,7 +59,9 @@ export class GridItemComponent extends BaseComponent<GridItemAttributes, GridIte
 		this.attributes.catalogId = item.CatalogId;
 		this.attributes.quantity = item.Qty;
 		this.attributes.isEquipped = item.CurrentSlotKey !== "Backpack";
-		this.render();
+		const catalogEntry = getCatalogEntryById(item.CatalogId);
+		this.cachedRarity = catalogEntry?.Rarity;
+		this.render(catalogEntry);
 	}
 
 	/**
@@ -75,21 +73,14 @@ export class GridItemComponent extends BaseComponent<GridItemAttributes, GridIte
 		this.attributes.quantity = 0;
 		this.attributes.isEquipped = false;
 		this.attributes.isSelected = false;
-		this.render();
-	}
-
-	/**
-	 * Set selection state
-	 */
-	public setSelected(selected: boolean): void {
-		this.attributes.isSelected = selected;
+		this.cachedRarity = undefined;
+		this.render(undefined);
 	}
 
 	/**
 	 * Full render based on current attributes
 	 */
-	private render(): void {
-		const catalogEntry = getCatalogEntryById(this.attributes.catalogId);
+	private render(catalogEntry?: { IconId: string; DisplayName: string; Rarity: RarityKey }): void {
 		const btn = this.instance.ItemButton;
 
 		// Update icon
@@ -104,7 +95,7 @@ export class GridItemComponent extends BaseComponent<GridItemAttributes, GridIte
 
 		// Render sub-states
 		this.renderEquippedState();
-		this.renderSelectedState();
+		this.renderSelectedState(rarityColor);
 		this.renderLockedState();
 		this.renderQuantity();
 	}
@@ -113,12 +104,11 @@ export class GridItemComponent extends BaseComponent<GridItemAttributes, GridIte
 		this.instance.ItemButton.EquippedLabel.Visible = this.attributes.isEquipped;
 	}
 
-	private renderSelectedState(): void {
-		const catalogEntry = getCatalogEntryById(this.attributes.catalogId);
-		const baseColor = catalogEntry ? (RARITY_COLORS[catalogEntry.Rarity] ?? DEFAULT_STROKE_COLOR) : DEFAULT_STROKE_COLOR;
+	private renderSelectedState(baseColor?: Color3): void {
+		const color = baseColor ?? (this.cachedRarity ? (RARITY_COLORS[this.cachedRarity] ?? DEFAULT_STROKE_COLOR) : DEFAULT_STROKE_COLOR);
 
 		// StateStroke shows selection - gold when selected, transparent when not
-		this.instance.StateStroke.Color = this.attributes.isSelected ? SELECTED_STROKE_COLOR : baseColor;
+		this.instance.StateStroke.Color = this.attributes.isSelected ? SELECTED_STROKE_COLOR : color;
 		this.instance.StateStroke.Thickness = this.attributes.isSelected ? 3 : 0;
 	}
 

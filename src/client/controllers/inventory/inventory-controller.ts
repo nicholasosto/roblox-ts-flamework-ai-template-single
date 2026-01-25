@@ -16,9 +16,10 @@ const logger = createLogger("controller:Inventory");
  * - Reconcile UI components when backpack changes
  * - Send equip/unequip/purchase requests to server
  * - Track selected slot for grid filtering
+ * - Push filtered items to grid via updateGridItems signal
  *
  * Design:
- * - Stateless UI queries via Components.getAllComponents()
+ * - Single source of truth for backpack data
  * - Signal-driven updates from server events
  * - Full backpack sync model (no incremental updates)
  */
@@ -29,6 +30,9 @@ export class InventoryController implements OnStart {
 
 	// Currently selected slot (for filtering and equip target)
 	private selectedSlotKey?: SlotKey;
+
+	// Current filter category
+	private currentFilter?: ItemCategory;
 
 	constructor(private components: Components) {}
 
@@ -70,21 +74,9 @@ export class InventoryController implements OnStart {
 			this.onItemSelected(itemId);
 		});
 
-		// Equip request from UI
-		ClientSignals.itemEquipRequest.Connect((itemId) => {
-			if (this.selectedSlotKey) {
-				this.requestEquip(itemId, this.selectedSlotKey);
-			} else {
-				logger.warn("No slot selected for equip");
-			}
-		});
-
-		// Unequip request from UI
-		ClientSignals.itemUnequipRequest.Connect((itemId) => {
-			const item = this.getItemById(itemId);
-			if (item && item.CurrentSlotKey !== "Backpack") {
-				this.requestUnequip(item.CurrentSlotKey);
-			}
+		// Category filter button pressed
+		ClientSignals.setCategoryFilter.Connect((category) => {
+			this.setFilterCategory(category);
 		});
 
 		// Purchase request from UI
@@ -101,12 +93,11 @@ export class InventoryController implements OnStart {
 		logger.info(`Backpack sync received: ${backpack.size()} items`);
 		this.backpack = backpack;
 
-		// Reconcile all UI components
+		// Reconcile slot components
 		this.reconcileSlotComponents();
-		this.reconcileGridComponents();
 
-		// Notify any listeners that inventory changed
-		ClientSignals.filterGridRequest.Fire(undefined); // Refresh grid display
+		// Push items to grid (filtered if a slot is selected)
+		this.pushItemsToGrid();
 	}
 
 	/**
@@ -139,12 +130,22 @@ export class InventoryController implements OnStart {
 	}
 
 	/**
-	 * Update ItemGridComponents with current backpack items
+	 * Push filtered items to the grid via signal
 	 */
-	private reconcileGridComponents(): void {
-		// Grid components handle their own filtering via filterGridRequest signal
-		// This method can be expanded if grids need direct data injection
-		logger.debug("Grid components reconciled");
+	private pushItemsToGrid(): void {
+		const items = this.getFilteredItems();
+		ClientSignals.updateGridItems.Fire(items, this.currentFilter);
+		logger.debug(`Pushed ${items.size()} items to grid (filter: ${this.currentFilter ?? "none"})`);
+	}
+
+	/**
+	 * Get items filtered by current category
+	 */
+	private getFilteredItems(): OwnedItem[] {
+		if (!this.currentFilter) {
+			return [...this.backpack];
+		}
+		return this.backpack.filter((item) => item.ItemCategory === this.currentFilter);
 	}
 
 	/* ================================================================
@@ -155,16 +156,16 @@ export class InventoryController implements OnStart {
 		// Toggle selection if same slot clicked
 		if (this.selectedSlotKey === slotKey) {
 			this.selectedSlotKey = undefined;
+			this.currentFilter = undefined;
 			this.clearSlotSelection();
-			ClientSignals.filterGridRequest.Fire(undefined); // Clear filter
 		} else {
 			this.selectedSlotKey = slotKey;
+			this.currentFilter = getCategoryForSlot(slotKey);
 			this.updateSlotSelection(slotKey);
-
-			// Filter grid by the category this slot accepts
-			const category = getCategoryForSlot(slotKey);
-			ClientSignals.filterGridRequest.Fire(category);
 		}
+
+		// Push filtered items to grid
+		this.pushItemsToGrid();
 
 		logger.debug(`Slot selected: ${this.selectedSlotKey ?? "none"}`);
 	}
@@ -197,6 +198,26 @@ export class InventoryController implements OnStart {
 		this.components.getAllComponents<ItemSlotComponent>().forEach((component) => {
 			component.setSelected(false);
 		});
+	}
+
+	/**
+	 * Set filter category (called by FilterGridButton)
+	 * Clears slot selection and filters grid by category
+	 */
+	public setFilterCategory(category?: ItemCategory): void {
+		// Clear slot selection when using category buttons
+		this.selectedSlotKey = undefined;
+		this.clearSlotSelection();
+
+		// Toggle filter if same category clicked
+		if (this.currentFilter === category) {
+			this.currentFilter = undefined;
+		} else {
+			this.currentFilter = category;
+		}
+
+		this.pushItemsToGrid();
+		logger.debug(`Filter category set: ${this.currentFilter ?? "none"}`);
 	}
 
 	/* ================================================================

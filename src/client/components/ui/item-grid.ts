@@ -2,8 +2,8 @@ import { BaseComponent, Component, Components } from "@flamework/components";
 import { OnStart } from "@flamework/core";
 import { CollectionService } from "@rbxts/services";
 import { createLogger } from "shared/utils";
-import { ClientSignals, Events } from "shared/network/client-network";
-import { OwnedItem, ItemCategory } from "shared/interfaces";
+import { ClientSignals } from "shared/network/client-network";
+import { OwnedItem } from "shared/interfaces";
 import { createGridItemInstance, GridItemComponentTag } from "shared/roblox-templates/ui-elements/grid-item";
 import { GridItemComponent } from "./grid-item-component";
 
@@ -20,8 +20,7 @@ export interface ItemGridAttributes {
  * - Inventory mode: Shows player's owned items
  * - Catalog mode: Shows all catalog items (for shop)
  *
- * Listens to filterGridRequest signal to filter by category.
- * Listens to backpackSync event to get items from server.
+ * Receives items via updateGridItems signal from InventoryController.
  * Spawns GridItemComponent instances and manages pooling.
  */
 @Component({
@@ -35,12 +34,6 @@ export class ItemGridComponent extends BaseComponent<ItemGridAttributes, Scrolli
 	private itemPool: GridItemComponent[] = [];
 	private activeItems: GridItemComponent[] = [];
 
-	// Current filter state
-	private currentFilter?: ItemCategory;
-
-	// Cached backpack data (received from server)
-	private backpack: OwnedItem[] = [];
-
 	// Components service for managing grid items
 	private components!: Components;
 
@@ -52,59 +45,10 @@ export class ItemGridComponent extends BaseComponent<ItemGridAttributes, Scrolli
 	onStart(): void {
 		logger.info(`ItemGridComponent started in ${this.attributes.mode} mode`);
 
-		// Listen for backpack sync from server
-		Events.inventory.backpackSync.connect((backpack) => {
-			this.backpack = backpack;
-			this.refreshGrid();
+		// Listen for item updates from InventoryController
+		ClientSignals.updateGridItems.Connect((items, _filter) => {
+			this.renderItems(items);
 		});
-
-		// Listen for filter changes
-		ClientSignals.filterGridRequest.Connect((categoryKey) => {
-			this.onFilterChanged(categoryKey);
-		});
-
-		// Initial render (will be empty until backpackSync fires)
-		this.refreshGrid();
-	}
-
-	/**
-	 * Handle filter change from slot selection
-	 */
-	private onFilterChanged(categoryKey?: ItemCategory): void {
-		this.currentFilter = categoryKey;
-		logger.debug(`Filter changed to: ${categoryKey ?? "all"}`);
-		this.refreshGrid();
-	}
-
-	/**
-	 * Refresh the grid with current filter
-	 */
-	public refreshGrid(): void {
-		// Get items based on mode
-		let items: OwnedItem[];
-
-		if (this.attributes.mode === "Inventory") {
-			items = this.getFilteredInventoryItems();
-		} else {
-			// Catalog mode - would show purchasable items
-			// For now, just show inventory
-			items = this.getFilteredInventoryItems();
-		}
-
-		this.renderItems(items);
-	}
-
-	/**
-	 * Get inventory items with current filter applied
-	 */
-	private getFilteredInventoryItems(): OwnedItem[] {
-		if (!this.currentFilter) {
-			// No filter - show all items
-			return [...this.backpack];
-		}
-
-		// Filter by category
-		return this.backpack.filter((item) => item.ItemCategory === this.currentFilter);
 	}
 
 	/**
