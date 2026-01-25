@@ -23,7 +23,13 @@
 		"roblox-ts-flamework-template:out/client/controllers/combat/wcs-controller@WCSController": "client/controllers/combat/wcs-controller@WCSController",
 		"roblox-ts-flamework-template:out/client/controllers/ui/ui-controller-new@UIControllerNew": "client/controllers/ui/ui-controller-new@UIControllerNew",
 		"roblox-ts-flamework-template:out/client/controllers/ui/ui-controller-old@UIController": "client/controllers/ui/ui-controller-old@UIController",
-		"roblox-ts-flamework-template:out/client/controllers/ui/ui-controller@UIControllerNew": "client/controllers/ui/ui-controller@UIControllerNew"
+		"roblox-ts-flamework-template:out/client/controllers/ui/ui-controller@UIControllerNew": "client/controllers/ui/ui-controller@UIControllerNew",
+		"roblox-ts-flamework-template:out/client/components/ui/item-slot-component@ItemSlotComponent": "client/components/ui/item-slot-component@ItemSlotComponent",
+		"roblox-ts-flamework-template:out/client/components/ui/item-grid@ItemGridComponent": "client/components/ui/item-grid@ItemGridComponent",
+		"roblox-ts-flamework-template:out/client/components/ui/item-grid-button@ScreenButton": "client/components/ui/item-grid-button@ScreenButton",
+		"roblox-ts-flamework-template:out/client/components/ui/item-grid-button@GridFilterButton": "client/components/ui/item-grid-button@GridFilterButton",
+		"roblox-ts-flamework-template:out/client/components/ui/filter-grid-button@GridFilterButton": "client/components/ui/filter-grid-button@GridFilterButton",
+		"roblox-ts-flamework-template:out/server/services/inventory-service@InventoryService": "server/services/inventory-service@InventoryService"
 	},
 	"metadata": {}
 }

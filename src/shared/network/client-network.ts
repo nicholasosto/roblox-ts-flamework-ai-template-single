@@ -1,3 +1,4 @@
+import { ItemCategory, SlotKey } from "../interfaces";
 import { ScreenKey } from "../types";
 import { GlobalEvents, GlobalFunctions } from "./flamework-remotes";
 import Signal from "@rbxts/sleitnick-signal";
@@ -13,10 +14,18 @@ export const ClientSignals = {
 	onExampleEvent: new Signal<[data: string]>(),
 
 	// Inventory item actions
-	itemUseRequest: new Signal<[itemId: number]>(),
-	itemEquipRequest: new Signal<[itemId: number]>(),
-	itemUnequipRequest: new Signal<[itemId: number]>(),
-	itemPurchaseRequest: new Signal<[itemId: number]>(),
+	itemUseRequest: new Signal<[itemId: string]>(),
+	itemEquipRequest: new Signal<[itemId: string]>(),
+	itemUnequipRequest: new Signal<[itemId: string]>(),
+	itemPurchaseRequest: new Signal<[itemId: string]>(),
+
+	// UI Events
+	itemSelected: new Signal<[itemId: string]>(),
+	itemSlotSelected: new Signal<[itemSlotComponent: SlotKey]>(),
+
+	// Grid Events
+	filterGridRequest: new Signal<[itemCategory?: ItemCategory]>(),
+	sortGridRequest: new Signal<[]>(),
 
 	// Toggle Screen
 	toggleScreenRequest: new Signal<[screenName?: ScreenKey]>(),

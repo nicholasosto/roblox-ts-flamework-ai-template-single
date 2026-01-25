@@ -1,12 +1,9 @@
 import { Service, OnStart } from "@flamework/core";
 import { Players, ReplicatedStorage } from "@rbxts/services";
-import {
-	Character,
-	DamageContainer,
-	CreateServer,
-	GetRegisteredSkillConstructor,
-} from "@rbxts/wcs";
+import { Character, DamageContainer, CreateServer, GetRegisteredSkillConstructor } from "@rbxts/wcs";
 import { createLogger } from "shared/utils/logger";
+import { ServerSignals } from "../../shared/network/server-network";
+import { OwnedItem } from "../../shared/interfaces";
 
 const logger = createLogger("WCSService");
 
@@ -23,9 +20,7 @@ export class WCSService implements OnStart {
 
 		// Register skills directory (WCS needs to know where skills are)
 		// This will scan the folder and run SkillDecorator on all skills
-		this.wcsServer.RegisterDirectory(
-			ReplicatedStorage.WaitForChild("TS").WaitForChild("combat") as Folder,
-		);
+		this.wcsServer.RegisterDirectory(ReplicatedStorage.WaitForChild("TS").WaitForChild("combat") as Folder);
 
 		// Start the WCS server - MUST be called before creating characters
 		this.wcsServer.Start();
@@ -38,8 +33,23 @@ export class WCSService implements OnStart {
 		for (const player of Players.GetPlayers()) {
 			this.onPlayerAdded(player);
 		}
-
+		this.registerServerSignals();
 		logger.info("WCS Service initialized");
+	}
+
+	private registerServerSignals() {
+		// Example signal registration
+		// ServerSignals.onExampleEvent.Connect((data: string) => {
+		// 	logger.info(`Received example event with data: ${data}`);
+		// });
+
+		ServerSignals.backpackUpdated.Connect((player: Player, backpack: OwnedItem[]) => {
+			backpack.mapFiltered((item) => {
+				if (item.ItemCategory === "Ability") {
+					logger.info(`Player ${player.Name} has ability item: ${item.UUID} (Catalog: ${item.CatalogId})`);
+				}
+			});
+		});
 	}
 
 	private onPlayerAdded(player: Player) {
@@ -91,14 +101,10 @@ export class WCSService implements OnStart {
 			logger.info(`${characterModel.Name} took ${damageContainer.Damage} damage`);
 		});
 
-		wcsCharacter.DamageDealt.Connect(
-			(target: Character | undefined, damageContainer: DamageContainer) => {
-				if (target) {
-					logger.info(
-						`${characterModel.Name} dealt ${damageContainer.Damage} damage to ${target.Instance.Name}`,
-					);
-				}
-			},
-		);
+		wcsCharacter.DamageDealt.Connect((target: Character | undefined, damageContainer: DamageContainer) => {
+			if (target) {
+				logger.info(`${characterModel.Name} dealt ${damageContainer.Damage} damage to ${target.Instance.Name}`);
+			}
+		});
 	}
 }

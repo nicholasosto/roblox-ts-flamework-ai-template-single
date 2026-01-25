@@ -11,13 +11,16 @@ import { AbilityCatalogEntry } from "../interfaces";
 
 /**
  * Static catalog of all slotable ability items.
+ *
+ * NOTE: CatalogId must match the WCS skill class name exactly (PascalCase)
+ * for automatic skill registration to work.
  */
 export const ABILITY_CATALOG: Record<string, AbilityCatalogEntry> = {
 	// ─────────────────────────────────────────────────────────────────
 	// BASIC ABILITIES
 	// ─────────────────────────────────────────────────────────────────
-	slash: {
-		CatalogId: "slash",
+	MeleeAttack: {
+		CatalogId: "MeleeAttack",
 		DisplayName: "Slash",
 		Description: "A reliable close-range strike available to every combatant.",
 		CatalogCategory: "Ability",
@@ -36,8 +39,8 @@ export const ABILITY_CATALOG: Record<string, AbilityCatalogEntry> = {
 	// ─────────────────────────────────────────────────────────────────
 	// MAGE ABILITIES
 	// ─────────────────────────────────────────────────────────────────
-	fireball: {
-		CatalogId: "fireball",
+	Fireball: {
+		CatalogId: "Fireball",
 		DisplayName: "Fireball",
 		Description: "Hurl a blazing projectile that explodes on impact.",
 		CatalogCategory: "Ability",
@@ -53,12 +56,12 @@ export const ABILITY_CATALOG: Record<string, AbilityCatalogEntry> = {
 		StatusEffects: [],
 	},
 
-	rain_fire: {
-		CatalogId: "rain_fire",
+	RainOfFire: {
+		CatalogId: "RainOfFire",
 		DisplayName: "Rain of Fire",
 		Description: "Call down a devastating rain of fire on a targeted location.",
 		CatalogCategory: "Ability",
-		IconId: ManagedImageAssets.AbilityIcons.HallowHold, // Placeholder
+		IconId: ManagedImageAssets.AbilityIcons.HallowHold, // Placeholder - skill not yet implemented
 		Rarity: "Epic",
 		PurchasePrice: 2500,
 		SellPrice: 625,
@@ -70,8 +73,8 @@ export const ABILITY_CATALOG: Record<string, AbilityCatalogEntry> = {
 		StatusEffects: [],
 	},
 
-	chain_lightning: {
-		CatalogId: "chain_lightning",
+	ChainLightning: {
+		CatalogId: "ChainLightning",
 		DisplayName: "Chain Lightning",
 		Description: "Unleash a bolt of lightning that arcs between multiple targets.",
 		CatalogCategory: "Ability",
@@ -87,15 +90,32 @@ export const ABILITY_CATALOG: Record<string, AbilityCatalogEntry> = {
 		StatusEffects: [],
 	},
 
+	LakeOfDecay: {
+		CatalogId: "LakeOfDecay",
+		DisplayName: "Lake of Decay",
+		Description: "Create a poison lake that damages enemies standing in it.",
+		CatalogCategory: "Ability",
+		IconId: ManagedImageAssets.AbilityIcons.HallowHold, // Placeholder
+		Rarity: "Epic",
+		PurchasePrice: 1800,
+		SellPrice: 450,
+		CurrencyKey: "Gold",
+		Cooldown: 10,
+		ResourceCost: 40,
+		CastTime: 0.5,
+		StatModifiers: {},
+		StatusEffects: [],
+	},
+
 	// ─────────────────────────────────────────────────────────────────
 	// UTILITY / SUPPORT ABILITIES
 	// ─────────────────────────────────────────────────────────────────
-	healing_light: {
-		CatalogId: "healing_light",
+	HealingLight: {
+		CatalogId: "HealingLight",
 		DisplayName: "Healing Light",
 		Description: "Channel restorative energy to heal yourself or an ally.",
 		CatalogCategory: "Ability",
-		IconId: ManagedImageAssets.AbilityIcons.Whirlwind, // Placeholder
+		IconId: ManagedImageAssets.AbilityIcons.Whirlwind, // Placeholder - skill not yet implemented
 		Rarity: "Rare",
 		PurchasePrice: 750,
 		SellPrice: 185,
@@ -110,8 +130,8 @@ export const ABILITY_CATALOG: Record<string, AbilityCatalogEntry> = {
 	// ─────────────────────────────────────────────────────────────────
 	// TEST ABILITIES
 	// ─────────────────────────────────────────────────────────────────
-	test_holdable: {
-		CatalogId: "test_holdable",
+	TestHoldable: {
+		CatalogId: "TestHoldable",
 		DisplayName: "Test Holdable",
 		Description: "A test skill for holdable abilities. Hold to charge, release to fire.",
 		CatalogCategory: "Ability",

@@ -1,4 +1,5 @@
 import { Networking } from "@flamework/networking";
+import { OwnedItem, SlotKey } from "../interfaces";
 
 /**
  * Define all client-to-server events here.
@@ -9,6 +10,18 @@ export interface ClientToServerEvents {
 	player: {
 		/** Example: Client notifies server of action */
 		onAction: (actionName: string) => void;
+	};
+
+	/** Inventory management events */
+	inventory: {
+		/** Request to equip an item to a slot */
+		requestEquip: (itemId: string, slotKey: SlotKey) => void;
+		/** Request to unequip an item from a slot */
+		requestUnequip: (slotKey: SlotKey) => void;
+		/** Request to purchase an item from catalog */
+		requestPurchase: (catalogId: string) => void;
+		/** Request to sell an item */
+		requestSell: (itemId: string, quantity: number) => void;
 	};
 }
 
@@ -21,6 +34,14 @@ export interface ServerToClientEvents {
 	notification: {
 		/** Example: Server sends notification to client */
 		show: (message: string, duration: number) => void;
+	};
+
+	/** Inventory sync events */
+	inventory: {
+		/** Full backpack sync from server */
+		backpackSync: (backpack: OwnedItem[]) => void;
+		/** Purchase result notification */
+		purchaseResult: (success: boolean, catalogId: string, message?: string) => void;
 	};
 }
 
