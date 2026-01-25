@@ -1,4 +1,5 @@
 import { ItemCategory, RarityKey, SlotKey } from "./inventory-keys";
+import { CurrencyKey } from "shared/currencies";
 
 /** Static catalog definition for an item type */
 export interface CatalogEntry {
@@ -12,7 +13,7 @@ export interface CatalogEntry {
 	RequiredLevel?: number;
 	PurchasePrice: number;
 	SellPrice: number;
-	CurrencyKey: string; // e.g., "Gold", "Gems", etc.
+	CurrencyKey: CurrencyKey; // Type-safe currency key
 	StatModifiers: Record<string, number>; // Optional stat modifiers
 	SlotRestriction?: SlotKey; // For equipment items now. Use will be expanded later.
 	StatusEffects: string[]; // For soul gems now. Use will be expanded later.
@@ -22,12 +23,12 @@ export interface CatalogEntry {
 
 /** Player-owned instance of an item */
 export type OwnedItem = {
-    CatalogId: string;
+	CatalogId: string;
 	ItemCategory: ItemCategory;
-    Qty: number;
-    CurrentSlotKey: 'Backpack' | SlotKey;
-    UUID: string;
-}
+	Qty: number;
+	CurrentSlotKey: "Backpack" | SlotKey;
+	UUID: string;
+};
 
 /* -------------------------------------------------------------------- /
 / ================= Inventory Catalog Entry Types ===================== /
@@ -38,5 +39,5 @@ export interface AbilityCatalogEntry extends CatalogEntry {
 	Cooldown?: number;
 	ResourceCost?: number;
 	ResourceType?: string;
-    CastTime?: number;
+	CastTime?: number;
 }
