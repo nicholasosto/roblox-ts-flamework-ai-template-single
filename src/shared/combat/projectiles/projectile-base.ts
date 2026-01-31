@@ -91,11 +91,7 @@ export class ProjectileBase {
 
 		// Apply gravity to velocity
 		if (this.config.gravity > 0) {
-			const gravityForce = new Vector3(
-				0,
-				-Workspace.Gravity * this.config.gravity * deltaTime,
-				0,
-			);
+			const gravityForce = new Vector3(0, -Workspace.Gravity * this.config.gravity * deltaTime, 0);
 			this.velocity = this.velocity.add(gravityForce);
 		}
 
@@ -125,8 +121,8 @@ export class ProjectileBase {
 				// Fire hit callback
 				this.onHit?.(hitResult);
 
-				// Check pierce limit
-				if (this.config.pierce > 0 && this.pierceCount >= this.config.pierce) {
+				// Check pierce limit (pierce: 0 = stop on first hit)
+				if (this.pierceCount > this.config.pierce) {
 					this.destroy();
 					return;
 				}

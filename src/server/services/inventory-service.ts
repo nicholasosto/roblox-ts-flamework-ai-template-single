@@ -38,32 +38,21 @@ export class InventoryService implements OnStart {
 
 	private registerNetworkEvents(): void {
 		// Equip request from client
-		Events.inventory.requestEquip.connect((player, itemId, slotKey) => {
-			this.equipItem(player, itemId, slotKey);
-		});
+		Events.inventory.requestEquip.connect((player, itemId, slotKey) => this.equipItem(player, itemId, slotKey));
 
 		// Unequip request from client
-		Events.inventory.requestUnequip.connect((player, slotKey) => {
-			this.unequipItem(player, slotKey);
-		});
+		Events.inventory.requestUnequip.connect((player, slotKey) => this.unequipItem(player, slotKey));
 
 		// Purchase request from client
-		Events.inventory.requestPurchase.connect((player, catalogId) => {
-			this.purchaseItem(player, catalogId);
-		});
+		Events.inventory.requestPurchase.connect((player, catalogId) => this.purchaseItem(player, catalogId));
 
 		// Sell request from client
-		Events.inventory.requestSell.connect((player, itemId, quantity) => {
-			this.sellItem(player, itemId, quantity);
-		});
+		Events.inventory.requestSell.connect((player, itemId, quantity) => this.sellItem(player, itemId, quantity));
 	}
 
 	private registerProfileListeners(): void {
 		// Send initial backpack sync when profile loads
-		this.playerProfileService.profileLoaded.Connect((player) => {
-			log.info(`Syncing initial backpack for ${player.Name}`);
-			this.syncBackpackToClient(player);
-		});
+		this.playerProfileService.profileLoaded.Connect((player) => this.syncBackpackToClient(player));
 	}
 
 	/* ================================================================
@@ -98,13 +87,6 @@ export class InventoryService implements OnStart {
 
 		this.syncBackpackToClient(player);
 		return newItem;
-	}
-
-	/**
-	 * Get a player's backpack (readonly access for other services)
-	 */
-	public getPlayerBackpack(player: Player): readonly OwnedItem[] | undefined {
-		return this.getBackpack(player);
 	}
 
 	/* ================================================================
