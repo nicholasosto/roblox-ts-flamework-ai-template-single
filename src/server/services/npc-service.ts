@@ -1,269 +1,282 @@
 import { Service, OnStart } from "@flamework/core";
-import { Workspace } from "@rbxts/services";
-import { Character, DamageContainer } from "@rbxts/wcs";
+import { Components } from "@flamework/components";
+import { CollectionService, HttpService, Workspace } from "@rbxts/services";
 import { createLogger } from "shared/utils/logger";
+import { RigsFolder } from "shared/roblox-templates/game-package";
+import { getNPCDefinition, NPC_CATALOG } from "shared/npc/npc-catalog";
+import { rollLootTable, rollCurrencyDrops } from "shared/npc/npc-loot-tables";
+import { NPCDefinition } from "shared/npc/npc-types";
+import { NPCSpawnerComponent } from "../components/npc/npc-spawner";
+import { WCSService } from "./wcs-service";
 
 const logger = createLogger("NPCService");
 
 /**
- * Simple NPC Service for testing combat skills
- * Spawns target dummies that can receive WCS damage
+ * NPC Service
+ * Manages NPC spawning, lifecycle, and cleanup
+ * Uses rig templates from the game package
  */
 @Service()
 export class NPCService implements OnStart {
-	private npcs = new Map<Model, Character>();
+	// NPC tracking
+	private activeNPCs = new Map<string, Model>(); // UUID -> Model
 	private npcFolder?: Folder;
+
+	/**
+	 * Constructor injection - Flamework automatically injects dependencies
+	 * WCSService dependency ensures WCS is initialized before NPCs spawn
+	 */
+	constructor(
+		private readonly components: Components,
+		// Injected to ensure WCS initializes before NPC spawning
+		_wcsService: WCSService,
+	) {}
 
 	onStart() {
 		logger.info("NPC Service starting...");
 
-		// Create folder for NPCs
+		// Create folder for NPCs in workspace
 		this.npcFolder = new Instance("Folder");
 		this.npcFolder.Name = "NPCs";
 		this.npcFolder.Parent = Workspace;
 
-		// Spawn some test dummies
-		this.spawnTestDummy(new Vector3(10, 565, 0), "TestDummy1");
-		this.spawnTestDummy(new Vector3(15, 535, 5), "TestDummy2");
-		this.spawnTestDummy(new Vector3(20, 605, -5), "TestDummy3");
+		// Connect spawner components
+		this.setupSpawnerCallbacks();
 
-		logger.info("NPC Service initialized - spawned 3 test dummies");
+		// Spawn some test NPCs
+		this.spawnTestNPCs();
+
+		logger.info("NPC Service initialized");
 	}
 
 	/**
-	 * Spawn a test dummy at the given position
+	 * Setup callbacks for spawner components
 	 */
-	public spawnTestDummy(position: Vector3, name: string): Model | undefined {
-		const dummy = this.createDummyModel(name);
-		if (!dummy) {
-			logger.warn(`Failed to create dummy: ${name}`);
+	private setupSpawnerCallbacks(): void {
+		// Helper to connect a spawner
+		const connectSpawner = (component: NPCSpawnerComponent) => {
+			component.onSpawnRequested = (defId, position) => this.spawnNPC(defId, position);
+			logger.debug(`Connected spawner: ${component.instance.Name}`);
+		};
+
+		// Connect spawners that ALREADY exist (loaded before this service started)
+		for (const component of this.components.getAllComponents<NPCSpawnerComponent>()) {
+			connectSpawner(component);
+		}
+
+		// Connect spawners added in the FUTURE
+		this.components.onComponentAdded<NPCSpawnerComponent>((component) => {
+			connectSpawner(component);
+		});
+	}
+
+	/**
+	 * Spawn test NPCs for development
+	 */
+	private spawnTestNPCs(): void {
+		// Spawn a few NPCs at fixed positions for testing
+		// You can remove this in production and use spawners instead
+
+		task.delay(2, () => {
+			// Training dummy
+			this.spawnNPC("training_dummy", new Vector3(10, 555, 0));
+
+			// A hostile NPC
+			this.spawnNPC("decay_zombie", new Vector3(20, 555, 10));
+
+			// Another hostile
+			this.spawnNPC("robot_worker", new Vector3(25, 555, -5));
+		});
+	}
+
+	/**
+	 * Spawn an NPC from the catalog
+	 */
+	public spawnNPC(definitionId: string, position: Vector3): Model | undefined {
+		const definition = getNPCDefinition(definitionId);
+		if (!definition) {
+			logger.warn(`NPC definition not found: ${definitionId}`);
 			return undefined;
 		}
 
-		// Position the dummy
-		const rootPart = dummy.FindFirstChild("HumanoidRootPart") as BasePart;
+		// Clone the rig template
+		const rigTemplate = RigsFolder.FindFirstChild(definition.rigKey) as Model | undefined;
+		if (!rigTemplate) {
+			logger.warn(`Rig template not found: ${definition.rigKey}`);
+			return undefined;
+		}
+
+		const npc = rigTemplate.Clone();
+		npc.Name = `${definition.displayName}_${HttpService.GenerateGUID(false).sub(1, 8)}`;
+
+		// Generate UUID for tracking
+		const uuid = HttpService.GenerateGUID(false);
+
+		// Set attributes for components
+		npc.SetAttribute("npcDefinitionId", definitionId);
+		npc.SetAttribute("npcUUID", uuid);
+		npc.SetAttribute("spawnX", position.X);
+		npc.SetAttribute("spawnY", position.Y);
+		npc.SetAttribute("spawnZ", position.Z);
+
+		// Position the NPC
+		const rootPart = npc.FindFirstChild("HumanoidRootPart") as BasePart | undefined;
 		if (rootPart) {
-			rootPart.CFrame = new CFrame(position);
+			npc.PivotTo(new CFrame(position));
 		}
 
 		// Parent to workspace
-		dummy.Parent = this.npcFolder;
+		npc.Parent = this.npcFolder;
 
-		// Create WCS Character wrapper (required for TakeDamage to work)
-		const wcsCharacter = new Character(dummy);
-		this.npcs.set(dummy, wcsCharacter);
+		// Add component tags
+		CollectionService.AddTag(npc, "npc:Base");
 
-		// Listen for damage
-		wcsCharacter.DamageTaken.Connect((damageContainer: DamageContainer) => {
-			this.onDummyDamaged(dummy, damageContainer);
-		});
-
-		// Handle humanoid death
-		const humanoid = dummy.FindFirstChild("Humanoid") as Humanoid;
-		if (humanoid) {
-			humanoid.Died.Once(() => {
-				logger.info(`${name} died! Respawning in 5 seconds...`);
-				this.cleanupNPC(dummy);
-
-				// Respawn after delay
-				task.delay(5, () => {
-					this.spawnTestDummy(position, name);
-				});
-			});
+		// Add AI tag if not stationary
+		if (definition.aiType !== "stationary") {
+			CollectionService.AddTag(npc, "npc:AI");
 		}
 
-		logger.info(`Spawned ${name} at ${position}`);
-		return dummy;
+		// Track the NPC
+		this.activeNPCs.set(uuid, npc);
+
+		// Setup death handling
+		this.setupDeathHandler(npc, definition, uuid, position);
+
+		logger.info(`Spawned ${definition.displayName} at ${position} (${uuid.sub(1, 8)})`);
+		return npc;
 	}
 
 	/**
-	 * Handle damage taken by a dummy
+	 * Setup death handling for an NPC
 	 */
-	private onDummyDamaged(dummy: Model, damageContainer: DamageContainer): void {
-		const humanoid = dummy.FindFirstChild("Humanoid") as Humanoid;
+	private setupDeathHandler(npc: Model, definition: NPCDefinition, uuid: string, spawnPosition: Vector3): void {
+		const humanoid = npc.FindFirstChildOfClass("Humanoid");
 		if (!humanoid) return;
 
-		// Apply damage to humanoid health
-		humanoid.TakeDamage(damageContainer.Damage);
+		humanoid.Died.Once(() => {
+			logger.info(`${definition.displayName} died!`);
 
-		logger.info(`${dummy.Name} took ${damageContainer.Damage} damage! Health: ${humanoid.Health}/${humanoid.MaxHealth}`);
+			// Drop loot
+			if (definition.lootTableId) {
+				this.dropLoot(npc, definition.lootTableId);
+			}
 
-		// Visual feedback - flash red
-		this.flashDummy(dummy);
-	}
+			// Cleanup after delay (give time for death animation)
+			task.delay(3, () => {
+				this.cleanupNPC(uuid);
+			});
 
-	/**
-	 * Flash the dummy red to indicate damage
-	 */
-	private flashDummy(dummy: Model): void {
-		const torso = dummy.FindFirstChild("Torso") as BasePart;
-		if (!torso) return;
-
-		const originalColor = torso.Color;
-		torso.Color = Color3.fromRGB(255, 0, 0);
-
-		task.delay(0.1, () => {
-			if (torso && torso.Parent) {
-				torso.Color = originalColor;
+			// Schedule respawn
+			if (definition.respawnTime > 0) {
+				task.delay(definition.respawnTime, () => {
+					this.spawnNPC(definition.id, spawnPosition);
+				});
 			}
 		});
 	}
 
 	/**
-	 * Clean up an NPC
+	 * Drop loot from an NPC
 	 */
-	private cleanupNPC(dummy: Model): void {
-		const wcsCharacter = this.npcs.get(dummy);
-		if (wcsCharacter) {
-			wcsCharacter.Destroy();
-			this.npcs.delete(dummy);
+	private dropLoot(npc: Model, lootTableId: string): void {
+		const rootPart = npc.FindFirstChild("HumanoidRootPart") as BasePart | undefined;
+		if (!rootPart) return;
+
+		// Position could be used for spawning pickup items in the future
+		// const dropPosition = rootPart.Position;
+
+		// Roll item drops
+		const itemDrops = rollLootTable(lootTableId);
+		for (const drop of itemDrops) {
+			logger.debug(`Dropped: ${drop.catalogId} x${drop.quantity}`);
+			// TODO: Create pickup or add to nearby player's inventory
 		}
-		dummy.Destroy();
+
+		// Roll currency drops
+		const currencyDrops = rollCurrencyDrops(lootTableId);
+		for (const drop of currencyDrops) {
+			logger.debug(`Dropped: ${drop.amount} ${drop.currency}`);
+			// TODO: Award to player who killed the NPC
+		}
 	}
 
 	/**
-	 * Create a simple R6 dummy model
+	 * Clean up an NPC
 	 */
-	private createDummyModel(name: string): Model | undefined {
-		const model = new Instance("Model");
-		model.Name = name;
+	private cleanupNPC(uuid: string): void {
+		const npc = this.activeNPCs.get(uuid);
+		if (!npc) return;
 
-		// Create Humanoid
-		const humanoid = new Instance("Humanoid");
-		humanoid.MaxHealth = 100;
-		humanoid.Health = 100;
-		humanoid.Parent = model;
+		this.activeNPCs.delete(uuid);
 
-		// Create body parts (R6 style)
-		const torso = this.createPart("Torso", new Vector3(2, 2, 1), Color3.fromRGB(163, 162, 165));
-		torso.Parent = model;
-		model.PrimaryPart = torso;
+		if (npc.Parent) {
+			npc.Destroy();
+		}
 
-		const head = this.createPart("Head", new Vector3(1.25, 1.25, 1.25), Color3.fromRGB(245, 205, 168));
-		head.Parent = model;
-
-		// Add face
-		const face = new Instance("Decal");
-		face.Name = "face";
-		face.Face = Enum.NormalId.Front;
-		face.Texture = "rbxasset://textures/face.png";
-		face.Parent = head;
-
-		const leftArm = this.createPart("Left Arm", new Vector3(1, 2, 1), Color3.fromRGB(245, 205, 168));
-		leftArm.Parent = model;
-
-		const rightArm = this.createPart("Right Arm", new Vector3(1, 2, 1), Color3.fromRGB(245, 205, 168));
-		rightArm.Parent = model;
-
-		const leftLeg = this.createPart("Left Leg", new Vector3(1, 2, 1), Color3.fromRGB(13, 105, 172));
-		leftLeg.Parent = model;
-
-		const rightLeg = this.createPart("Right Leg", new Vector3(1, 2, 1), Color3.fromRGB(13, 105, 172));
-		rightLeg.Parent = model;
-
-		// Create HumanoidRootPart (required for WCS and character detection)
-		const rootPart = this.createPart("HumanoidRootPart", new Vector3(2, 2, 1), Color3.fromRGB(163, 162, 165));
-		rootPart.Transparency = 1;
-		rootPart.Parent = model;
-
-		// Position parts relative to root
-		this.positionR6Parts(rootPart, head, torso, leftArm, rightArm, leftLeg, rightLeg);
-
-		// Create Motor6D joints
-		this.createR6Joints(rootPart, head, torso, leftArm, rightArm, leftLeg, rightLeg);
-
-		return model;
+		logger.debug(`Cleaned up NPC ${uuid.sub(1, 8)}`);
 	}
 
-	private createPart(name: string, size: Vector3, color: Color3): BasePart {
-		const part = new Instance("Part");
-		part.Name = name;
-		part.Size = size;
-		part.Color = color;
-		part.Anchored = false;
-		part.CanCollide = true;
-		return part;
+	/**
+	 * Get an active NPC by UUID
+	 */
+	public getNPC(uuid: string): Model | undefined {
+		return this.activeNPCs.get(uuid);
 	}
 
-	private positionR6Parts(
-		root: BasePart,
-		head: BasePart,
-		torso: BasePart,
-		leftArm: BasePart,
-		rightArm: BasePart,
-		leftLeg: BasePart,
-		rightLeg: BasePart,
-	): void {
-		// Position relative to root (which is at center of torso)
-		torso.CFrame = root.CFrame;
-		head.CFrame = root.CFrame.mul(new CFrame(0, 1.625, 0));
-		leftArm.CFrame = root.CFrame.mul(new CFrame(-1.5, 0, 0));
-		rightArm.CFrame = root.CFrame.mul(new CFrame(1.5, 0, 0));
-		leftLeg.CFrame = root.CFrame.mul(new CFrame(-0.5, -2, 0));
-		rightLeg.CFrame = root.CFrame.mul(new CFrame(0.5, -2, 0));
+	/**
+	 * Get all active NPCs
+	 */
+	public getAllNPCs(): Model[] {
+		const npcs: Model[] = [];
+		for (const [, npc] of this.activeNPCs) {
+			npcs.push(npc);
+		}
+		return npcs;
 	}
 
-	private createR6Joints(
-		root: BasePart,
-		head: BasePart,
-		torso: BasePart,
-		leftArm: BasePart,
-		rightArm: BasePart,
-		leftLeg: BasePart,
-		rightLeg: BasePart,
-	): void {
-		// Root -> Torso
-		const rootJoint = new Instance("Motor6D");
-		rootJoint.Name = "RootJoint";
-		rootJoint.Part0 = root;
-		rootJoint.Part1 = torso;
-		rootJoint.C0 = new CFrame();
-		rootJoint.C1 = new CFrame();
-		rootJoint.Parent = root;
+	/**
+	 * Get active NPC count
+	 */
+	public getActiveCount(): number {
+		return this.activeNPCs.size();
+	}
 
-		// Torso -> Head (Neck)
-		const neck = new Instance("Motor6D");
-		neck.Name = "Neck";
-		neck.Part0 = torso;
-		neck.Part1 = head;
-		neck.C0 = new CFrame(0, 1, 0);
-		neck.C1 = new CFrame(0, -0.5, 0);
-		neck.Parent = torso;
+	/**
+	 * Despawn all NPCs
+	 */
+	public despawnAll(): void {
+		for (const [uuid] of this.activeNPCs) {
+			this.cleanupNPC(uuid);
+		}
+		logger.info("Despawned all NPCs");
+	}
 
-		// Torso -> Left Arm
-		const leftShoulder = new Instance("Motor6D");
-		leftShoulder.Name = "Left Shoulder";
-		leftShoulder.Part0 = torso;
-		leftShoulder.Part1 = leftArm;
-		leftShoulder.C0 = new CFrame(-1, 0.5, 0);
-		leftShoulder.C1 = new CFrame(0.5, 0.5, 0);
-		leftShoulder.Parent = torso;
+	/**
+	 * Spawn NPCs by tier (useful for events/waves)
+	 */
+	public spawnWave(tier: NPCDefinition["tier"], count: number, center: Vector3, radius: number): void {
+		const eligibleNPCs: string[] = [];
+		for (const [id, def] of pairs(NPC_CATALOG)) {
+			if (def.tier === tier && def.aiType !== "stationary") {
+				eligibleNPCs.push(id);
+			}
+		}
 
-		// Torso -> Right Arm
-		const rightShoulder = new Instance("Motor6D");
-		rightShoulder.Name = "Right Shoulder";
-		rightShoulder.Part0 = torso;
-		rightShoulder.Part1 = rightArm;
-		rightShoulder.C0 = new CFrame(1, 0.5, 0);
-		rightShoulder.C1 = new CFrame(-0.5, 0.5, 0);
-		rightShoulder.Parent = torso;
+		if (eligibleNPCs.size() === 0) {
+			logger.warn(`No NPCs found for tier: ${tier}`);
+			return;
+		}
 
-		// Torso -> Left Leg
-		const leftHip = new Instance("Motor6D");
-		leftHip.Name = "Left Hip";
-		leftHip.Part0 = torso;
-		leftHip.Part1 = leftLeg;
-		leftHip.C0 = new CFrame(-0.5, -1, 0);
-		leftHip.C1 = new CFrame(0, 1, 0);
-		leftHip.Parent = torso;
+		for (let i = 0; i < count; i++) {
+			const defId = eligibleNPCs[math.random(0, eligibleNPCs.size() - 1)];
+			const angle = math.random() * math.pi * 2;
+			const distance = math.random() * radius;
+			const offset = new Vector3(math.cos(angle) * distance, 0, math.sin(angle) * distance);
+			const position = center.add(offset);
 
-		// Torso -> Right Leg
-		const rightHip = new Instance("Motor6D");
-		rightHip.Name = "Right Hip";
-		rightHip.Part0 = torso;
-		rightHip.Part1 = rightLeg;
-		rightHip.C0 = new CFrame(0.5, -1, 0);
-		rightHip.C1 = new CFrame(0, 1, 0);
-		rightHip.Parent = torso;
+			this.spawnNPC(defId, position);
+		}
+
+		logger.info(`Spawned wave of ${count} ${tier} NPCs`);
 	}
 }

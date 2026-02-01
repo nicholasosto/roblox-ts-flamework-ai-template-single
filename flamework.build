@@ -35,7 +35,10 @@
 		"roblox-ts-flamework-template:out/client/components/ui/grid-item-component@GridItemComponent": "client/components/ui/grid-item-component@GridItemComponent",
 		"roblox-ts-flamework-template:out/client/components/ui/canvas-button@CanvasButton": "client/components/ui/canvas-button@CanvasButton",
 		"roblox-ts-flamework-template:out/client/components/ui/character-canvas@CharacterCanvas": "client/components/ui/character-canvas@CharacterCanvas",
-		"roblox-ts-flamework-template:out/server/services/npc-service@NPCService": "server/services/npc-service@NPCService"
+		"roblox-ts-flamework-template:out/server/services/npc-service@NPCService": "server/services/npc-service@NPCService",
+		"roblox-ts-flamework-template:out/server/components/npc/npc-component@NPCComponent": "server/components/npc/npc-component@NPCComponent",
+		"roblox-ts-flamework-template:out/server/components/npc/npc-ai-component@NPCAIComponent": "server/components/npc/npc-ai-component@NPCAIComponent",
+		"roblox-ts-flamework-template:out/server/components/npc/npc-spawner@NPCSpawnerComponent": "server/components/npc/npc-spawner@NPCSpawnerComponent"
 	},
 	"metadata": {}
 }
