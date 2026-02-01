@@ -17,7 +17,7 @@ export class Fireball extends Skill {
 		damage: 35, // Damage on hit
 		gravity: 0, // No gravity (straight line)
 		pierce: 0, // Stop on first hit
-		radius: 1, // Visual radius
+		radius: 3, // Visual radius
 	};
 
 	private readonly COOLDOWN = 2; // Seconds
@@ -57,12 +57,7 @@ export class Fireball extends Skill {
 		// Create projectile with character filtered out
 		const filterInstances: Instance[] = [characterModel];
 
-		this.serverProjectile = new ProjectileBase(
-			this.CONFIG,
-			spawnPosition,
-			direction,
-			filterInstances,
-		);
+		this.serverProjectile = new ProjectileBase(this.CONFIG, spawnPosition, direction, filterInstances);
 
 		// Handle hit
 		this.serverProjectile.onHit = (result) => this.onProjectileHit(result);
@@ -82,9 +77,10 @@ export class Fireball extends Skill {
 	}
 
 	public OnEndServer() {
-		// Cleanup projectile if still active
-		this.serverProjectile?.destroy();
-		this.serverProjectile = undefined;
+		// Fire-and-forget: Don't destroy the projectile when skill ends
+		// The projectile manages its own lifecycle (destroys on hit or max range)
+		// This prevents the skill ending from killing the projectile prematurely
+		print("[Fireball] OnEndServer called - projectile continues independently");
 	}
 
 	/**
@@ -178,11 +174,7 @@ export class Fireball extends Skill {
 		const fireball = new Instance("Part");
 		fireball.Name = "FireballVisual";
 		fireball.Shape = Enum.PartType.Ball;
-		fireball.Size = new Vector3(
-			this.CONFIG.radius * 2,
-			this.CONFIG.radius * 2,
-			this.CONFIG.radius * 2,
-		);
+		fireball.Size = new Vector3(this.CONFIG.radius * 2, this.CONFIG.radius * 2, this.CONFIG.radius * 2);
 		fireball.Material = Enum.Material.Neon;
 		fireball.Color = Color3.fromRGB(255, 100, 0); // Orange
 		fireball.Anchored = true;

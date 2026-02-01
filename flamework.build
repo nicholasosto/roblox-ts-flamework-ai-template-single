@@ -38,7 +38,10 @@
 		"roblox-ts-flamework-template:out/server/services/npc-service@NPCService": "server/services/npc-service@NPCService",
 		"roblox-ts-flamework-template:out/server/components/npc/npc-component@NPCComponent": "server/components/npc/npc-component@NPCComponent",
 		"roblox-ts-flamework-template:out/server/components/npc/npc-ai-component@NPCAIComponent": "server/components/npc/npc-ai-component@NPCAIComponent",
-		"roblox-ts-flamework-template:out/server/components/npc/npc-spawner@NPCSpawnerComponent": "server/components/npc/npc-spawner@NPCSpawnerComponent"
+		"roblox-ts-flamework-template:out/server/components/npc/npc-spawner@NPCSpawnerComponent": "server/components/npc/npc-spawner@NPCSpawnerComponent",
+		"roblox-ts-flamework-template:out/shared/package-template/services/pt-service-test@PTServiceTest": "shared/package-template/services/pt-service-test@PTServiceTest",
+		"roblox-ts-flamework-template:out/shared/package-template/controllers/pt-controller-test@PTControllerTest": "shared/package-template/controllers/pt-controller-test@PTControllerTest",
+		"roblox-ts-flamework-template:out/shared/package-template/components/pt-component-test@PTComponentTest": "shared/package-template/components/pt-component-test@PTComponentTest"
 	},
 	"metadata": {}
 }

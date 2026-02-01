@@ -99,14 +99,19 @@ export class ProjectileBase {
 		const movement = this.velocity.mul(deltaTime);
 		const movementMagnitude = movement.Magnitude;
 
-		// Raycast for hit detection
+		// Spherecast for hit detection (uses radius from config for more forgiving hits)
+		// We cast slightly further than movement to catch targets at the edge
+		const castDirection = movement.Unit.mul(movementMagnitude + this.config.radius);
 		const hitResult = projectileRaycast({
 			origin: this.currentPosition,
-			direction: movement,
+			direction: castDirection,
 			filterInstances: this.filterInstances,
+			radius: this.config.radius,
 		});
 
-		if (hitResult.hit && hitResult.distance <= movementMagnitude) {
+		// Check if we hit something within this frame's travel distance (plus radius for spherecast tolerance)
+		const hitThreshold = movementMagnitude + this.config.radius;
+		if (hitResult.hit && hitResult.distance <= hitThreshold) {
 			// Hit something!
 			this.currentPosition = hitResult.position;
 			this.distanceTraveled += hitResult.distance;
