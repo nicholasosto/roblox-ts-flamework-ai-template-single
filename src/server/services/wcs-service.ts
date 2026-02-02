@@ -4,6 +4,7 @@ import { Character, DamageContainer, CreateServer, GetRegisteredSkillConstructor
 import { createLogger } from "shared/utils/logger";
 import { ServerSignals } from "../../shared/network/server-network";
 import { OwnedItem, ABILITY_SLOT_KEYS } from "../../shared/interfaces";
+import { InventoryService } from "./inventory-service";
 
 const logger = createLogger("WCSService");
 
@@ -24,6 +25,8 @@ export class WCSService implements OnStart {
 
 	// Track registered skills per player for diffing
 	private playerSkills = new Map<Player, Set<string>>();
+
+	constructor(private readonly inventoryService: InventoryService) {}
 
 	onStart() {
 		logger.info("WCS Service starting...");
@@ -163,8 +166,13 @@ export class WCSService implements OnStart {
 
 		logger.info(`Created WCS Character for ${characterModel.Name}`);
 
-		// NOTE: Skills are now added via backpackUpdated signal from InventoryService
-		// No default skills are added here - they come from equipped abilities
+		// Request current backpack to sync equipped skills
+		// This handles both initial spawn and respawn cases
+		const backpack = this.inventoryService.getPlayerBackpack(player);
+		if (backpack) {
+			this.updatePlayerSkills(player, backpack);
+			logger.info(`Synced skills for ${player.Name} on character setup`);
+		}
 
 		// Clean up on death
 		const humanoid = characterModel.WaitForChild("Humanoid") as Humanoid;

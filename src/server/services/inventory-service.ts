@@ -253,6 +253,13 @@ export class InventoryService implements OnStart {
 	   ================================================================ */
 
 	/**
+	 * Public: Get a player's backpack (for other services)
+	 */
+	public getPlayerBackpack(player: Player): OwnedItem[] | undefined {
+		return this.getBackpack(player);
+	}
+
+	/**
 	 * Get backpack array from player profile
 	 */
 	private getBackpack(player: Player): OwnedItem[] | undefined {
